@@ -17,17 +17,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.math.BigDecimal;
 import java.util.Currency;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -46,7 +42,7 @@ import ru.vladimir.personalaccounter.service.UserService;
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = BankAccountController.class)
 @Import(MockConfiguration.class)
-class BankAccountEditTest {
+class BankAccountControllerEditOperationTest {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -66,68 +62,136 @@ class BankAccountEditTest {
 	@MockBean
 	private JwtProvider jwtProvider;
 	
-	@Mock
-    private Authentication auth;
-	
-	@BeforeEach
-	void setUp() {
-		AppUser theAppUser = new AppUser("pupa", "pupa", "123", "123", "pupa@mail.ru", true);
-		when(auth.getPrincipal()).thenReturn(theAppUser);
-        SecurityContextHolder.getContext().setAuthentication(auth);
-	}
-
+	/*
+	 * тестирую что неавторизованный пользователь получить страницу банк аккаунта не может,
+	 * и его кидает на страницу авторизации.
+	 */
 	@Test
 	void testGetEditBankAccountShouldBeFailAnounimousUser() throws Exception {
 		mockMvc.perform(get("/bank-account/1")).andExpect(redirectedUrl("http://localhost/login"));
 	}
-
+	
+	/*
+	 * тестирую что если пользователь пытается получить доступ к BankAccount который ему не принадлежит
+	 * получает сообщение NOT FOUND
+	 */
 	@Test
+	@WithMockUser(roles = "user", username = "pupa")
 	void testGetEditBankAccountShouldBeFailIllegalUser() throws Exception {
-//		AppUser theAppUser = new AppUser("pupa", "pupa", "123", "123", "pupa@mail.ru", true);
-		AppUser theFakeAppUser = new AppUser("fake", "fake", "123", "123", "fake@mail.ru", true);
-//		BankAccount theBankAccount = new BankAccount("test", 100, "test", theAppUser, Currency.getInstance("RUB"));
-		when(bankAccountService.getBankAccountById(1L)).thenThrow(new BankAccountNotFoundException(""));
-		mockMvc.perform(get("/bank-account/1").with(user(theFakeAppUser)).servletPath("/bank-account")).andExpect(status().is4xxClientError());
+		when(bankAccountService.getBankAccountById(1L)).thenThrow(BankAccountNotFoundException.class);
+		mockMvc.perform(get("/bank-account/1"))
+			.andExpect(status().isNotFound());
 	}
-
+	/*
+	 * тестирую что если пользователь авторизован и он владелец BankAccount он получает страницу редактирования
+	 */
 	@Test
+	@WithMockUser(roles = "user", username = "pupa")
 	void testGetEditBankAccountShouldBeOk() throws Exception {
 		AppUser theUser = new AppUser("pupa", "pupa", "123", "123", "pupa@mail.ru", true);
-		BankAccount theBankAccount = new BankAccount("test", BigDecimal.valueOf(100), "test", theUser, Currency.getInstance("RUB"));
 		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
+		
+		BankAccount theBankAccount = new BankAccount("test", BigDecimal.valueOf(100), "test", theUser, Currency.getInstance("RUB"));
 		theBankAccount.setId(1L);
 		when(bankAccountService.getBankAccountById(1L)).thenReturn(theBankAccount);
-		mockMvc.perform(get("/bank-account/1").with(user(theUser)).servletPath("/bank-account")).andExpect(status().isOk())
+		
+		mockMvc.perform(get("/bank-account/1")).andExpect(status().isOk())
 				.andExpect(view().name("bankaccount-edit-page"));
 	}
-
+	
+	/*
+	 *тестирую что если пользователь авторизован и он владелец BankAccount и у BankAccount нет транзакций
+	 *он может удалить этот счет. Проверяем что метод удаления был вызван 1 раз.
+	 */
 	@Test
+	@WithMockUser(roles = "user", username = "pupa")
 	void testGetDeleteBankAccountShouldBeOk() throws Exception {
 		AppUser theUser = new AppUser("pupa", "pupa", "123", "123", "pupa@mail.ru", true);
+		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
+		
 		BankAccount theBankAccount = new BankAccount("test", BigDecimal.valueOf(100), "test", theUser, Currency.getInstance("RUB"));
 		theBankAccount.setId(1L);
-		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
+		when(bankAccountService.bankAccountHasTransaction(theBankAccount)).thenReturn(false);
 		when(bankAccountService.getBankAccountById(1L)).thenReturn(theBankAccount);
-		mockMvc.perform(get("/bank-account/delete/1").with(user(theUser))).andExpect(redirectedUrl("/"));
+		
+		mockMvc.perform(get("/bank-account/delete/1"))
+			.andExpect(redirectedUrl("/"));
+		
 		verify(bankAccountService, times(1)).delete(theBankAccount);
 	}
-
-	// test post method
+	
+	/*
+	 * Тестирую что если у BankAccount есть транзакции, будет выброшена страница редактирования и на ней
+	 * будет готовая ссылка с параметром удаления всех транзакций.Метод удаления не был вызван ниразу
+	 */
 	@Test
-	@WithMockUser(roles = "user")
-	void testEditBankAccountPostShouldBeFailValidCurrencyIsNull() throws Exception {
+	@WithMockUser(roles = "user", username = "pupa")
+	void testEditBankAccountShouldReturnPageWithForceParameterDeleteTransaction() throws Exception{
 		AppUser theUser = new AppUser("pupa", "pupa", "123", "123", "pupa@mail.ru", true);
-		BankAccount theBankAccount = new BankAccount();
 		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
-		theBankAccount.setName("test");
-		theBankAccount.setAppUser(theUser);
-		mockMvc.perform(post("/bank-account/1").flashAttr("bankAccount", theBankAccount).with(csrf()).with(user(theUser))
-				).andExpect(model().hasErrors())
-				.andExpect(model().attributeHasFieldErrors("bankAccount", "currency"));
+		
+		BankAccount theBankAccount = new BankAccount("test", BigDecimal.valueOf(100), "test", theUser, Currency.getInstance("RUB"));
+		theBankAccount.setId(1L);
+		when(bankAccountService.bankAccountHasTransaction(theBankAccount)).thenReturn(true);
+		when(bankAccountService.getBankAccountById(1L)).thenReturn(theBankAccount);
+		
+		mockMvc.perform(get("/bank-account/delete/1"))
+		.andExpect(view().name("bankaccount-edit-page"))
+		.andExpect(model().attributeExists("bankAccountHasTransaction"));
+	
+		verify(bankAccountService, times(0)).delete(theBankAccount);
+		
+	}
+	
+	/*
+	 * Тестирую что если пользователь хочет удалить BankAccount и у него есть транзакции, но пользователь указал параметр force
+	 * происходит удаление bankAccount.
+	 * Пользователя редиректит на /
+	 */
+	@Test
+	@WithMockUser(roles = "user", username = "pupa")
+	void testGetDeleteBankAccountShouldBeOkBankAccountHasTransactions() throws Exception {
+		AppUser theUser = new AppUser("pupa", "pupa", "123", "123", "pupa@mail.ru", true);
+		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
+		
+		BankAccount theBankAccount = new BankAccount("test", BigDecimal.valueOf(100), "test", theUser, Currency.getInstance("RUB"));
+		theBankAccount.setId(1L);
+		when(bankAccountService.bankAccountHasTransaction(theBankAccount)).thenReturn(true);
+		when(bankAccountService.getBankAccountById(1L)).thenReturn(theBankAccount);
+		
+		mockMvc.perform(get("/bank-account/delete/1?force=true"))
+			.andExpect(redirectedUrl("/"));
+		
+		verify(bankAccountService, times(1)).delete(theBankAccount,true);
 	}
 
+	/*
+	 * хотя это не возможно, но все же тестирую что пользователь не убрал Curreny со страницы редактирования
+	 * ожидаю что будет возвращена страница редактирования.
+	 */
 	@Test
-	@WithMockUser(roles = "user", username = "pupa", password = "$2a$10$sq.M51v8.gbvWlkx6tPXsuwROmqCPLay20G9v5.C/RxzxdGdS311K")
+	@WithMockUser(roles = "user", username = "pupa")
+	void testEditBankAccountPostShouldBeFailValidCurrencyIsNull() throws Exception {
+		AppUser theUser = new AppUser("pupa", "pupa", "123", "123", "pupa@mail.ru", true);
+		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
+		
+		BankAccount theBankAccount = new BankAccount();
+		theBankAccount.setName("test");
+		theBankAccount.setAppUser(theUser);
+		
+		mockMvc.perform(post("/bank-account/1").flashAttr("bankAccount", theBankAccount).with(csrf())
+				).andExpect(model().hasErrors())
+				.andExpect(model().attributeHasFieldErrors("bankAccount", "currency"))
+				.andExpect(view().name("bankaccount-edit-page"));
+	}
+	/*
+	 * тестирую что пользователь может сохранить изменения в BankAccount, никаких ошибок быть не должно.
+	 * ожидаю что его перебросить на страницу Редактирование BankAccount с параметром success. 
+	 * будет вызван метод сохранения BankAccount 1 раз. 
+	 * 
+	 */
+	@Test
+	@WithMockUser(roles = "user", username = "pupa")
 	void testEditBankAccountPostShouldBeOk() throws Exception {
 		AppUser theUser = new AppUser("pupa", "pupa", "123", "123", "pupa@mail.ru", true);
 		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
@@ -145,30 +209,19 @@ class BankAccountEditTest {
 
 	}
 
-	// i move checj null bank account to service method
-	@Disabled
+	/*
+	 * тестирую что пользователь может сохранить BankAccount, сумму он поменял. 
+	 * ожидаю что будет создана транзакция AdjustmentTransaction. 
+	 * пользователя перебросить на страницу редактирования BankAccount с параметром success.
+	 * у theBankAccount будет не пустой список AdjustmentTransactions
+	 * будет вызван метод сохранения BankAccount 1 раз. 
+	 */
 	@Test
-	@WithMockUser(roles = "user", username = "pupa", password = "$2a$10$sq.M51v8.gbvWlkx6tPXsuwROmqCPLay20G9v5.C/RxzxdGdS311K")
-	void testEditBankAccountPostShouldBeFailBankAccountNotFoundExceptio() throws Exception {
-		AppUser theAppUser = new AppUser("pupa", "pupa", "123", "123", "pupa@mail.ru", true);
-		BankAccount theBankAccount = new BankAccount();
-		theBankAccount.setName("test");
-		theBankAccount.setBalance(BigDecimal.valueOf(100));
-		theBankAccount.setCurrency(Currency.getInstance("RUB"));
-		theBankAccount.setAppUser(theAppUser);
-		when(bankAccountService.getBankAccountById(any())).thenReturn(null);
-		mockMvc.perform(
-				post("/bank-account/1").flashAttr("bankAccount", theBankAccount).with(csrf()).with(user(theAppUser)))
-				.andExpect(status().is4xxClientError());
-		verify(bankAccountService, times(0)).save(theBankAccount);
-
-	}
-
-	@Test
-	@WithMockUser(roles = "user", username = "pupa", password = "$2a$10$sq.M51v8.gbvWlkx6tPXsuwROmqCPLay20G9v5.C/RxzxdGdS311K")
+	@WithMockUser(roles = "user", username = "pupa")
 	void testEditBankAccountPostShouldBeCreateBankAccountAdjustmentDecrease() throws Exception {
 		AppUser theUser = new AppUser("pupa", "pupa", "123", "123", "pupa@mail.ru", true);
 		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
+		
 		BankAccount theBankAccount = new BankAccount();
 		theBankAccount.setName("test");
 		theBankAccount.setBalance(BigDecimal.valueOf(100));
@@ -179,18 +232,26 @@ class BankAccountEditTest {
 		when(bankAccountService.getBankAccountById(any())).thenReturn(oldBankAccount);
 
 		mockMvc.perform(
-				post("/bank-account/1").flashAttr("bankAccount", theBankAccount).with(csrf()).with(user(theUser)))
+				post("/bank-account/1").flashAttr("bankAccount", theBankAccount).with(csrf()))
 				.andExpect(model().hasNoErrors()).andExpect(redirectedUrl("/bank-account/1?success=true"));
 
-		verify(bankAccountService, times(1)).save(theBankAccount);
+		
 		assertFalse(theBankAccount.getTransactions() == null);
 		assertFalse(theBankAccount.getTransactions().stream().findFirst().orElse(null)
 				.getTypeOfOperation() == TypeOfOperation.INCREASE);
-
+		
+		verify(bankAccountService, times(1)).save(theBankAccount);
 	}
 
+	/*
+	 * тестирую что пользователь может сохранить BankAccount, сумму он поменял. 
+	 * ожидаю что будет создана транзакция AdjustmentTransaction cтипом DECREASE. 
+	 * пользователя перебросит на страницу редактирования BankAccount с параметром success.
+	 * у theBankAccount будет не пустой список AdjustmentTransactions
+	 * будет вызван метод сохранения BankAccount 1 раз. 
+	 */
 	@Test
-	@WithMockUser(roles = "user", username = "pupa", password = "$2a$10$sq.M51v8.gbvWlkx6tPXsuwROmqCPLay20G9v5.C/RxzxdGdS311K")
+	@WithMockUser(roles = "user", username = "pupa")
 	void testEditBankAccountPostShouldBeCreateBankAccountAdjustmentIncrease() throws Exception {
 		AppUser theUser = new AppUser("pupa", "pupa", "123", "123", "pupa@mail.ru", true);
 		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
@@ -205,14 +266,15 @@ class BankAccountEditTest {
 		when(bankAccountService.getBankAccountById(any())).thenReturn(oldBankAccount);
 
 		mockMvc.perform(
-				post("/bank-account/1").flashAttr("bankAccount", theBankAccount).with(csrf()).with(user(theUser)))
+				post("/bank-account/1").flashAttr("bankAccount", theBankAccount).with(csrf()))
 				.andExpect(model().hasNoErrors()).andExpect(redirectedUrl("/bank-account/1?success=true"));
 
-		verify(bankAccountService, times(1)).save(theBankAccount);
+		
 		assertFalse(theBankAccount.getTransactions() == null);
 		assertFalse(theBankAccount.getTransactions().stream().findFirst().orElse(null)
 				.getTypeOfOperation() == TypeOfOperation.DECREASE);
-
+		
+		verify(bankAccountService, times(1)).save(theBankAccount);
 	}
 
 }
