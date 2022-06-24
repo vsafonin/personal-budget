@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<title th:text="#{recoverPage.title}">Personal budget app login
+	page</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link
+	href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css"
+	rel="stylesheet" id="bootstrap-css" />
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<link rel="stylesheet" th:href="@{/css/login/styles.css}"
+	href="styles.css" />
+<!------ Include the above in your HEAD tag ---------->
+
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-6 col-md-offset-3">
+				<div class="panel panel-login">
+					<div class="panel-heading">
+						<div class="row">
+							<div class="col-xs-6">
+								<p th:text="#{recoverPage.recoverText}"> Password recovery</p>
+							</div>
+						</div>
+						<hr>
+					</div>
+					<div class="panel-body">
+						<div class="row">
+							<div class="col-lg-12">
+								<form id="recover-form" role="form" style="display: block;"
+									th:action="@{/recover}" th:method="post">
+									<div class="form-group">
+										<input type="text" name="email" id="email" tabindex="1"
+											class="form-control"
+											th:placeholder="#{recoverPage.inputEmail}" th:value="${email}">
+									</div>
+									<div class="form-group">
+										<div class="row">
+											<div class="col-sm-6 col-sm-offset-3">
+												<input type="submit" name="login-submit" id="login-submit"
+													tabindex="4" class="form-control btn btn-login"
+													th:value="#{loginPage.loginButton}">
+											</div>
+										</div>
+									</div>
+									<div class="form-group">
+										<div class="row">
+											<div class="col-lg-12">
+												<div class="text-center">
+													<a th:href="@{/}" tabindex="5"
+														
+														th:text="#{indexPage.homeLink}">go home</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script th:src="@{/js/login/script.js}" src="script.js"></script>
+</body>
+</html>

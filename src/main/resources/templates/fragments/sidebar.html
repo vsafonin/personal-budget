@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8" />
+	<title>
+	</title>
+</head>
+<body>
+      <div class="border-end bg-white" id="sidebar-wrapper" th:fragment="sidebar">
+                <div class="sidebar-heading border-bottom bg-light" th:text="#{indexPage.sideBarName}">Menu</div>
+                <div class="list-group list-group-flush">
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3" th:href="@{/}" th:text="#{indexPage.purchaseTransaction}">purchase transactions</a>
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3" th:href="@{/debt}" th:text="#{indexPage.debtTransaction}">Debts</a>
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3" th:href="@{/salary}" th:text="#{indexPage.salaryTransaction}">Salary</a>
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3" th:href="@{/reports}" th:text="#{reports.link}">Reports</a>
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3" th:href="@{/transfer}" th:text="#{transfer.link}">Transfer</a>
+                  </div>
+                <div class="container">
+                	<hr/>
+	  				<p th:text="#{bankAccount.sideBar.title}">Bank Account list </p>
+	                <ul class="nav flex-column" th:each="account : ${bankAccounts}">
+	  					<li class="nav-item">
+		    					<a class="nav-link active" th:href="@{/bank-account/{id}(id=${account.id})}" th:text="${account.name}">account 1</a>
+		    					<p style="margin-left:20px;" th:text="${account.balance + ' ' + account.currency.currencyCode }">balance
+	  					</li>
+	  				</ul>
+	  				<!-- добавить новый счет -->
+	  					  			
+	  				<a th:unless="${user == null}" th:href="@{/bank-account/0}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true" th:text="#{bankAccount.create.button.text}">create new</a>
+	  				<a th:if="${user == null}" href="#" class="btn btn-primary btn-lg disabled" role="button" aria-disabled="true"> </a>
+  				</div>
+  		</div>
+</body>
+</html>

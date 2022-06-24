@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head th:insert="fragments/head :: header">
+<title th:text="#{indexPage.title}">Personal budget app edit
+	bank account</title>
+</head>
+<body>
+	<div class="d-flex" id="wrapper">
+		<!-- Sidebar-->
+		<div th:replace="fragments/sidebar :: sidebar">
+			<!-- меню с лева -->
+		</div>
+		<!-- Page content wrapper-->
+		<div id="page-content-wrapper">
+			<!-- Top navigation-->
+			<nav th:replace="fragments/navbar :: navbar"></nav>
+			<!-- контент страницы личного кабинета пользователя -->
+			<form
+				th:action="@{/debt-transaction/payment/{id}(id=${debtPayment.id})}"
+				th:method="post" th:object="${debtPayment}">
+				<!-- скрытые поля для сохранения элемента а не созадния дубликата при редактировании формы -->
+				<input type="hidden" th:field="*{id}" /> <input type="hidden"
+					th:if="${debtPayment.id != 0}" th:field="*{payDate}" /> <input
+					type="hidden" th:field="*{debtTransaction}" />
+
+				<div class="form-group row gy-5">
+					<label for="paySum" class="col-sm-2 col-form-label"
+						th:text="#{transaction.debt.payment.edit.page.paySum}">Pay
+						sum</label>
+					<div class="col-sm-10 p-1">
+						<input type="number" step="0.01" class="form-control w-75" id="pathner"
+							th:placeholder="#{transaction.debt.payment.edit.page.paySum}"
+							th:field="*{paySum}">
+					</div>
+				</div>
+				<div class="form-group row gy-5">
+					<div class="col-sm-10">
+						<button type="submit" class="btn btn-primary"
+							th:text="#{transaction.edit.page.saveBtn}">Save it</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+	<div th:replace="fragments/scripts :: scripts">
+		<!-- скрипты для кнопок и так далее -->
+	</div>
+</body>
+</html>

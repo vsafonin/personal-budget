@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head th:insert="fragments/head :: header">
+<title th:text="#{indexPage.title}"> Bank Account Edit page</title>
+</head>
+<body>
+	<div class="d-flex" id="wrapper">
+		<!-- Sidebar-->
+		<div th:replace="fragments/sidebar :: sidebar">
+			<!-- меню с лева -->
+		</div>
+
+		<!-- Page content wrapper-->
+		<div id="page-content-wrapper">
+			<!-- Top navigation-->
+			<nav th:replace="fragments/navbar :: navbar"></nav>
+			<div th:if="${#httpServletRequest.getParameter('success') != null}" class="alert alert-success">
+				<h2 th:text="#{user.profile.success}">Success message</h2>
+			</div>
+			<form th:action="@{/bank-account/{id}(id=${bankAccount.id})}" th:method="post"
+				th:object="${bankAccount}">
+				<!-- скрытые поля для сохранения не нужных пользователю полей -->
+					<input type="hidden" th:field="*{id}">
+					<input type="hidden" th:field="*{appUser}">
+					
+				<div class="form-group row gy-5">
+					<label for="bankName" class="col-sm-2 col-form-label"
+						th:text="#{bankAccount.edit-page.bankName}">Bank name</label>
+					<div class="col-sm-10 p-1">
+						<input type="text" class="form-control w-75" id="bankName"
+							th:placeholder="#{bankAccount.edit-page.bankName}"
+							th:field="*{name}">
+					</div>
+					<div th:if="${#fields.hasErrors('name')}"
+						class="alert alert-danger">
+						<p th:errors="*{name}"></p>
+					</div>
+					<div th:if="${errorName}" class="alert alert-danger">
+						<p th:text="#{bankAccount.edit-page.bankNameExist}"></p>
+					</div>
+				</div>
+				<div class="form-group row gy-5">
+					<label for="balance" class="col-sm-2 col-form-label"
+						th:text="#{bankAccount.edit-page.balance}">Balance</label>
+					<div class="col-sm-10 p-1">
+						<input type="number" step="0.01" class="form-control w-75" id="bankName"
+							th:placeholder="#{bankAccount.edit-page.balance}"
+							th:field="*{balance}">
+					</div>
+					<div th:if="${#fields.hasErrors('balance')}"
+						class="alert alert-danger">
+						<p th:errors="*{balance}"></p>
+					</div>
+				</div>
+				<div class="form-group row gy-5">
+					<label for="description" class="col-sm-2 col-form-label"
+						th:text="#{bankAccount.edit-page.description}">Description</label>
+					<div class="col-sm-10 p-1">
+						<input type="text" class="form-control w-75" id="description"
+							th:placeholder="#{bankAccount.edit-page.description}"
+							th:field="*{description}">
+					</div>
+				</div>
+				<div class="form-group row gy-5" th:unless="${bankAccount.defaultAccount}">
+					<label for="isDefault" class="col-sm-2 col-form-label"
+						th:text="#{bankAccount.edit-page.isDefault}">set default</label>
+					<div class="col-sm-10 p-1">
+						<div class="form-check form-switch">
+							<input class="form-check-input" type="checkbox" id="isDefault"
+								th:placeholder="#{bankAccount.edit-page.isDefault}"
+								th:field="*{defaultAccount}">
+						</div>
+					</div>
+				</div>
+				<!-- Currency -->
+				<!-- костыльный селект так как по другому не получается сохранить выбранную валюту -->
+				<div class="form-group row gy-5">
+					<label for="currency" class="col-sm-2 col-form-label"
+						th:text="#{bankAccount.edit-page.selectCurrency}">Select
+						currency</label>
+					<div class="col-sm-10 p-1" th:if="${bankAccount.id == 0}">
+						<select th:field="*{currency}" class="form-control w-75" size="5"
+							aria-label="size 3 .form-select-sm example" />
+						<option th:each="currency : ${currencySet}" th:value="${currency}"
+							th:text="${currency.currencyCode}"
+							th:selected="${currency.numericCode==643}"></option>
+						</select>
+					</div>
+					<div class="col-sm-10 p-1" th:unless="${bankAccount.id == 0}">
+						<select th:field="*{currency}" class="form-control w-75" size="5"
+							aria-label="size 3 .form-select-sm example" />
+						<option th:each="currency : ${currencySet}" th:value="${currency}"
+							th:text="${currency.currencyCode}"
+							th:selected="${currency.numericCode==bankAccount.currency.numericCode}"></option>
+						</select>
+					</div>
+				</div>
+				
+				<div class="form-group row gy-5">
+					<div class="col-sm-10">
+						
+						<button type="submit" class="btn btn-primary"
+							th:text="#{bankAccount.edit-page.saveBtn}">Create it</button>
+						<a th:unless="${bankAccount.id == 0}" class="btn btn-danger"
+							th:href="@{/bank-account/delete/{id}(id=${bankAccount.id})}"
+							role="button" th:text="#{bankAccount.edit-page.deleteBtn}"
+							th:data-confirm-delete="#{bankAccount.edit-page.deleteConfirmAnswer}"
+							onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete
+							it</a>
+					</div>
+					<!-- если была попытка удалить и у пользователя есть транзакции -->
+					<div th:if="${#bools.isTrue(bankAccountHasTransaction)}" class="col-sm-10" style="color: red;">
+						<p th:text="#{bankAccount.edit-page.bankAccountHasTransactions}"> </p>
+						<a th:href="@{/bank-account/delete/{id}(id=${bankAccount.id},force='true')}" th:text="#{bankAccount.edit-page.forceDelete}"> force delete</a>
+					</div>
+				</div>
+			</form>
+			<br />
+			<!-- тут таблица с транзакциями -->
+			<p th:text="#{bankAccount.edit-page.listOfAdjustment}">
+				<br />
+			<table class="table table-hover">
+				<thead>
+					<tr>
+						<th scope="col" th:text="#{indexPage.transaction.table.sum}">Sum</th>
+						<th scope="col" th:text="#{indexPage.transaction.table.date}">Date</th>
+						<th scope="col" th:text="#{indexPage.transaction.table.edit}">edit</th>
+						<th scope="col" th:text="#{indexPage.transaction.table.delete}">delete</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="transaction : ${transactions}">
+						<td th:if="${transaction.typeOfOperation.name() == 'INCREASE'}"
+							th:text="'+' + ${transaction.sumTransaction + ' ' + transaction.currency.currencyCode}">Sum</td>
+						<td th:if="${transaction.typeOfOperation.name() == 'DECREASE'}"
+							th:text="'-' + ${transaction.sumTransaction + ' ' + transaction.currency.currencyCode}">Sum</td>
+						<td
+							th:text="${#dates.format(transaction.createTime, 'dd-MM-yyyy HH:MM')}">create
+							time</td>
+						<td><a th:href="@{/transaction/{id}(id=${transaction.id})}"
+							th:text="#{indexPage.transaction.table.edit}">Edit link </a></td>
+						<td><a
+							th:href="@{/transaction/delete/{id}(id=${transaction.id})}"
+							th:text="#{indexPage.transaction.table.delete}"
+							th:data-confirm-delete="#{indexPage.transaction.table.deleteAnswer}"
+							onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete
+								link </a></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<div th:replace="fragments/scripts :: scripts">
+		<!-- скрипты для кнопок и так далее -->
+	</div>
+</body>
+</html>

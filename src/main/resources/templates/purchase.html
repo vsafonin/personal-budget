@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head th:insert="fragments/head :: header">
+<title th:text="#{indexPage.title}">Personal budget app</title>
+</head>
+<body>
+	<div class="d-flex" id="wrapper">
+
+		<div th:replace="fragments/sidebar :: sidebar">
+			<!-- Sidebar-->
+		</div>
+
+		<div id="page-content-wrapper">
+			
+			<nav th:replace="fragments/navbar :: navbar">
+				<!-- Top navigation-->
+			</nav>
+			<!-- Page content-->
+			<div class="container-fluid">
+				<h4 th:text="#{indexPage.purchaseTransaction}">Purchase transactions</h4>
+				<div class="container">
+					<div class="row">
+						<div class="col">
+							<label for="filter" th:text="#{indexPage.filterByBank}">Filter
+								by bank</label> <select id="filter"  class="selectpicker" data-live-search="true" data-size="5"
+								th:data-shop-filter = "${filterByShop}"
+								th:onchange="'window.location.href = \'' + @{/} + '?filterByBankName=\'
+											 + this.value
+											 + \'&filterByShop=\' + this.getAttribute(\'data-shop-filter\')
+											 '">
+								<option value="" th:text="#{indexPage.filterByBank.nothing}">Nothing
+									selected</option>
+								<option th:each="name : ${bankAccounts}" th:text="${name.name}"
+									th:selected="${name.name == filterByBank}"></option>
+							</select>
+						</div>
+						<div class="col">
+								<label for="filter" th:text="#{indexPage.filterByShop}">Filter
+								by shop</label> <select id="filter"  class="selectpicker" data-live-search="true" data-size="5"
+								th:data-bank-filter="${filterByBank}"
+								th:onchange="'window.location.href = \'' + @{/} + '?filterByBankName=\'
+											 + this.getAttribute(\'data-bank-filter\')
+											 + \'&filterByShop=\' + this.value
+											 '">
+								<option value="" th:text="#{indexPage.filterByBank.nothing}">Nothing
+									selected</option>
+								<option th:each="name : ${shops}"
+									th:text="${name.name}"
+									th:selected="${name.name == filterByShop}"></option>
+							</select>
+						</div>
+					</div>
+
+
+
+				</div>
+				<br />
+				
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th scope="col" th:text="#{indexPage.transaction.table.bank}">Bank</th>
+							<th scope="col"
+								th:text="#{indexPage.purchaseTransaction.table.shop}">Shop</th>
+							<th scope="col"
+								th:text="#{indexPage.purchaseTransaction.table.products}">Products</th>
+							<th scope="col"
+								th:text="#{indexPage.purchaseTransaction.table.totalSum}">Total
+								sum</th>
+							<th scope="col" th:text="#{indexPage.transaction.table.date}">Date</th>
+							<th scope="col" th:text="#{indexPage.transaction.table.edit}">Edit</th>
+							<th scope="col" th:text="#{indexPage.transaction.table.delete}">Delete</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="transaction : ${purchaseTransactions}">
+							<td th:text="${transaction.bankAccount.name}">bank</td>
+							<td th:text="${transaction.shop.name}">shop</td>
+							<td th:text="${transaction.getProductNameString()}">products</td>
+							<td th:text="${transaction.sumTransaction}">Total sum</td>
+							<td
+								th:text="${#dates.format(transaction.createTime, 'dd-MM-yyyy HH:MM')}">Create
+								date</td>
+							<td><a
+								th:href="@{/purchase-transaction/{id}(id=${transaction.id})}"
+								th:text="#{indexPage.transaction.table.edit}">Edit link </a></td>
+							<td><a
+								th:href="@{/purchase-transaction/delete/{id}(id=${transaction.id})}"
+								th:text="#{indexPage.transaction.table.delete}"
+								th:data-confirm-delete="#{indexPage.transaction.table.deleteAnswer}"
+								onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete
+									link </a></td>
+						</tr>
+					</tbody>
+				</table>
+				<!-- ссылки на страницы -->
+				<ul class="pagination">
+					<li class="page-item"><a class="page-link"
+						th:href="@{/(page=1)}">first</a></li>
+					<th:block th:each="pageLeftItem : ${pagesLeft}">
+						<li th:if="${pageLeftItem == pageNum}" class="page-item active">
+							<a class="page-link" th:href="@{/(page=${pageLeftItem})}"
+							th:text="${pageLeftItem}">1</a>
+						</li>
+						<th:block th:unless="${pageLeftItem == 0}">
+							<li th:unless="${pageLeftItem == pageNum}" class="page-item">
+								<a class="page-link" th:href="@{/(page=${pageLeftItem})}"
+								th:text="${pageLeftItem}">1</a>
+							</li>
+						</th:block>
+					</th:block>
+					<th:block th:each="pageRightItem : ${pagesRight}">
+						<li th:unless="${pageRightItem == 0}" class="page-item"><a
+							class="page-link" th:href="@{/(page=${pageRightItem})}"
+							th:text="${pageRightItem}">1</a></li>
+					</th:block>
+					<li class="page-item"><a class="page-link"
+						th:href="@{/(page=${pageCount})}">last</a></li>
+				</ul>
+
+				<br /> <a class="btn btn-primary"
+					th:href="@{/purchase-transaction/0}"
+					th:text="#{indexPage.transaction.new}">Create new</a>
+			</div>
+		</div>
+	</div>
+
+	<div th:replace="fragments/scripts :: scripts">
+		<!-- скрипты для кнопок и так далее -->
+	</div>
+</body>
+</html>

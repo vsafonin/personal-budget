@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<head th:insert="fragments/head :: header">
+<title th:text="#{indexPage.title}">Personal budget user profile</title>
+</head>
+</head>
+<body onload="loadPage()">
+	<div class="d-flex" id="wrapper">
+		<!-- Sidebar-->
+		<div th:replace="fragments/sidebar :: sidebar">
+			<!-- меню с лева -->
+		</div>
+
+		<!-- Page content wrapper-->
+		<div id="page-content-wrapper">
+			<!-- Top navigation-->
+			<nav th:replace="fragments/navbar :: navbar"></nav>
+			<!-- контент страницы личного кабинета пользователя -->
+			<div th:if="${success}">
+				<h2 style="color: green;" th:text="#{user.profile.success}">Success
+					message</h2>
+			</div>
+			<div th:if="${emailChanged}">
+				<h2 style="color: green;" th:text="#{user.profile.activateNewEmail}">Activate
+					new email</h2>
+			</div>
+			<!-- так как не хочеться требовать дополнительный ввод пароля, поля просто тектосвые поля не field -->
+			<form th:action="@{/user/{id}(id=${user.id})}" th:method="post"
+				th:object="${user}">
+				<div class="form-group row">
+					<label for="username" class="col-sm-2 col-form-label"
+						th:text="#{loginPage.usernamePlaceHolder}">Username</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control w-75" id="username"
+							th:placeholder="#{loginPage.usernamePlaceHolder}"
+							th:name="username" th:value="${user.username}">
+					</div>
+					<div th:unless="${#strings.isEmpty(errusername)}"
+						class="alert alert-danger">
+						<p th:text="${errusername}"></p>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="displayName" class="col-sm-2 col-form-label"
+						th:text="#{loginPage.displaynamePlaceHolder}">Display name</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control w-75" id="displayName"
+							th:placeholder="#{loginPage.displaynamePlaceHolder}"
+							th:name="displayName" th:value="${user.displayName}">
+					</div>
+					<div th:unless="${#strings.isEmpty(errdisplayName)}"
+						class="alert alert-danger">
+						<p th:text="${errdisplayName}"></p>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="email" class="col-sm-2 col-form-label"
+						th:text="#{loginPage.emailPlaceHolder}">Email</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control w-75" id="passwordConfirm"
+							th:placeholder="#{loginPage.emailPlaceHolder}" th:name="email"
+							th:value="${user.email}">
+					</div>
+					<div th:unless="${#strings.isEmpty(erremail)}"
+						class="alert alert-danger">
+						<p th:text="${erremail}"></p>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="oldPassword" class="col-sm-2 col-form-label"
+						th:text="#{user.profile.oldpasswordPlaceHolder}">Password</label>
+					<div class="col-sm-10">
+						<input type="password" class="form-control w-75" id="oldPassword"
+							th:placeholder="#{user.profile.oldpasswordPlaceHolder}"
+							th:name="oldPassword">
+					</div>
+					<div th:if="${errorOldPassword}" class="alert alert-danger">
+						<p th:text="#{user.profile.wronPassword}">
+					</div>
+
+				</div>
+				<div class="form-check form-switch">
+					<input class="form-check-input" type="checkbox" id="changePassword"
+						th:name="changePassword" onclick="displayPasswordsField()">
+					<label class="form-check-label" for="flexSwitchCheckDefault"
+						th:text="#{user.profile.changePassword}" th:name="changePassword">Change
+						password</label>
+				</div>
+				<div style="display: none;" id="passwordFields">
+					<div class="form-group row">
+						<label for="newPassword" class="col-sm-2 col-form-label"
+							th:text="#{user.profile.newPassword}">New Password</label>
+						<div class="col-sm-10">
+							<input type="password" class="form-control w-75" id="newPassword"
+								th:placeholder="#{user.profile.newPassword}"
+								th:name="newPassword">
+						</div>
+						<div th:unless="${#strings.isEmpty(errpassword)}"
+							class="alert alert-danger">
+							<p th:text="${errpassword}"></p>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="confirmPassword" class="col-sm-2 col-form-label"
+							th:text="#{loginPage.confirmPasswordPlaceHolder}">Confirm
+							Password</label>
+						<div class="col-sm-10">
+							<input type="password" class="form-control w-75"
+								id="confirmPassword"
+								th:placeholder="#{loginPage.confirmPasswordPlaceHolder}"
+								th:name="confirmPassword">
+						</div>
+						<div th:if="${errConfirmPassword != null}" class="alert alert-danger">
+							<p th:text="#{user.vlidation.message.passwordField}"></p>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<div class="col-sm-10">
+						<button type="submit" class="btn btn-primary">Sign in</button>
+					</div>
+				</div>
+			</form>
+
+			<div class="form-group row">
+				<p>тут список токенов
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<!--<th scope="col" th:text="#{indexPage.tableTransaction.typeOfTransaction}">type of transaction</th>-->
+							<th scope="col" th:text="#{user.jwtToken.title}">Token</th>
+							<th scope="col" th:text="#{user.jwtToken.expDate}">Expired
+								date</th>
+							<th scope="col" th:text="#{user.jwtToken.delete}">Delete</th>
+						</tr>
+					</thead>
+					<tbody th:unless="${user.appUserJwtTokens == null}">
+						<tr th:each="token : ${user.appUserJwtTokens}">
+							<td th:text="${token.token}">token</td>
+							<td th:text="${#dates.format(token.expDate,'dd-MM-yyyy')}">exp date</td>
+
+							<td><a th:href="@{/user/deleteJwt/{id}(id=${token.id})}"
+								th:text="#{user.jwtToken.delete}"
+								th:data-confirm-delete="#{user.jwtToken.deleteAnswer}"
+								onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete
+									link </a></td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="col-sm-10">
+					<a th:href="@{/user/generatejwt}"
+						th:thext="#{user.jwtToken.createButton}">Create new token</a>
+				</div>
+			</div>
+		</div>
+
+
+
+	</div>
+
+
+	<div th:replace="fragments/scripts :: scripts">
+		<!-- скрипты для кнопок и так далее -->
+	</div>
+	<!-- скрипт прячет поля паролей (старый пароль, новый, подтверждение) -->
+	<script type="text/javascript">
+		function loadPage() {
+			var checkBox = document.getElementById("changePassword");
+			var passwordFields = document.getElementById("passwordFields");
+			var passwordFieldsToggled = JSON.parse(localStorage
+					.getItem("passwordFieldsToggled"));
+			if (passwordFieldsToggled == true) {
+				checkBox.checked = true;
+				passwordFields.style.display = "block";
+			} else {
+				checkBox.checked = false;
+				passwordFields.style.display = "none";
+			}
+		}
+
+		function displayPasswordsField() {
+			var checkBox = document.getElementById("changePassword");
+			var passwordFields = document.getElementById("passwordFields");
+			if (checkBox.checked == true) {
+				passwordFields.style.display = "block";
+				localStorage.setItem('passwordFieldsToggled', true);
+			} else {
+				passwordFields.style.display = "none";
+				localStorage.setItem('passwordFieldsToggled', false);
+			}
+		}
+	</script>
+</body>
+</html>

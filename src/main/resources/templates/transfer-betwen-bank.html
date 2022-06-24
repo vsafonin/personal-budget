@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head th:insert="fragments/head :: header">
+        <title th:text="#{indexPage.title}">Personal budget app edit bank account</title>
+</head>
+<body>
+	<div class="d-flex" id="wrapper">
+			<!-- Sidebar-->
+			<div th:replace="fragments/sidebar :: sidebar">
+				<!-- меню с лева -->
+			</div>
+			<!-- Page content wrapper-->
+			<div id="page-content-wrapper">
+				<!-- Top navigation-->
+				<nav th:replace="fragments/navbar :: navbar"></nav>
+				<!-- контент страницы личного кабинета пользователя -->
+				<form th:action="@{/transfer}" th:method="post"
+				th:object="${transferTransaction}">
+					<!-- скрытые поля для сохранения элемента а не созадния дубликата при редактировании формы -->
+					<input type="hidden" th:field="*{id}"/>
+					<input type="hidden" th:field="*{createTime}"/>
+					<input type="hidden" th:field="*{appUser}" th:value="${user.id}" th:name="appUser"/>
+					<div class="alert alert-danger" th:if="${error}">
+						<p th:text="${error}">
+					</div>
+				<div class="form-group row gy-5">
+					<label for="bankAccountName" class="col-sm-2 col-form-label"
+						th:text="#{transaction.trnsferTransaction.edit.page.fromBankAccount}">From Bank Account</label>
+						<div class="col-sm-10 p-1">
+							<select th:field="*{fromBankAccount}" class="form-control w-75" size="1" aria-label="size 1 .form-select-sm example"/>
+										<option
+										th:each="bankAccountEntry : ${bankAccounts}" 
+										th:value="${bankAccountEntry.id}"
+										th:text="${bankAccountEntry.name}"
+										th:selected="${bankAccountEntry == transferTransaction.fromBankAccount}"></option>
+							</select>
+						</div>
+					<label for="bankAccountName" class="col-sm-2 col-form-label"
+						th:text="#{transaction.trnsferTransaction.edit.page.toBankAccount}">to Bank Account</label>
+						<div class="col-sm-10 p-1">
+							<select th:field="*{toBankAccount}" class="form-control w-75" size="1" aria-label="size 1 .form-select-sm example"/>
+										<option
+										th:each="bankAccountEntry : ${bankAccounts}"
+										th:value="${bankAccountEntry.id}"
+										th:text="${bankAccountEntry.name}"
+										th:selected="${bankAccountEntry == transferTransaction.toBankAccount}"></option>
+							</select>
+						</div>
+					<label for="bankAccountName" class="col-sm-2 col-form-label"
+						th:text="#{transaction.trnsferTransaction.edit.page.sum}">Sum</label>
+						<div class="col-sm-10 p-1">
+								<div class="col-sm-10 p-1">
+									<input type="number" step="0.01" th:field=*{sumTransactionFrom}>
+								</div>
+						</div>
+				</div>
+				<div class="form-group row gy-5">
+					<div class="col-sm-10">
+						<button type="submit" class="btn btn-primary" th:text="#{transaction.adjustment.edit.page.saveBtn}">Save it</button>
+					</div>
+				</div>
+				</form>
+			</div>
+	</div>
+	<div th:replace="fragments/scripts :: scripts">
+		<!-- скрипты для кнопок и так далее -->
+	</div>
+</body>
+</html>

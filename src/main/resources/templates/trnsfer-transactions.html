@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head th:insert="fragments/head :: header">
+<title th:text="#{indexPage.title}">Personal budget app</title>
+</head>
+<body>
+	<div class="d-flex" id="wrapper">
+		<!-- Sidebar-->
+
+
+		<div th:replace="fragments/sidebar :: sidebar">
+			<!-- меню с лева -->
+		</div>
+		<!-- Page content wrapper-->
+		<div id="page-content-wrapper">
+			<!-- Top navigation-->
+			<nav th:replace="fragments/navbar :: navbar"></nav>
+			<!-- Page content-->
+			<div class="container-fluid">
+				<h4 th:text="#{indexPage.debtTransaction.decrease}">				
+				</h4>
+				<div class="container">
+					<div class="row">
+						<div class="col">
+							<label for="filter" th:text="#{indexPage.filterByBank}">Filter
+								by bank</label> <select id="filter"  class="selectpicker" data-live-search="true" data-size="5"
+								th:data-filter-by-bank-to="${filterByBankNameTo}"
+								th:onchange="'window.location.href = \'' + @{/transfer} + '?filterByBankNameFrom=\'
+											 + this.value
+											 + \'&filterByBankNameTo=\' + this.getAttribute(\'data-filter-by-bank-to\')
+											 '">
+								<option value="" th:text="#{indexPage.filterByBank.nothing}">Nothing
+									selected</option>
+								<option th:each="name : ${bankAccounts}" th:text="${name.name}"
+									th:selected="${name.name == filterByBankFrom}"></option>
+							</select>
+						</div>
+						<div class="col">
+							<label for="filter" th:text="#{indexPage.filterByBank}">Filter
+								by bank</label> <select id="filter"  class="selectpicker" data-live-search="true" data-size="5"
+								th:data-filter-by-bank-from="${filterByBankNameFrom}"
+								th:onchange="'window.location.href = \'' + @{/transfer} + '?filterByBankName=\'
+											 + this.getAttribute(\'data-filter-by-bank-from\')
+											 + \'&filterByBankNameTo=\' + this.value
+											 '">
+								<option value="" th:text="#{indexPage.filterByBank.nothing}">Nothing
+									selected</option>
+								<option th:each="name : ${bankAccounts}" th:text="${name.name}"
+									th:selected="${name.name == filterByBankTo}"></option>
+							</select>
+						</div>
+					</div>
+
+				</div>
+				<br />
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th scope="col" th:text="#{transaction.trnsferTransaction.edit.page.from}">From</th>
+							<th scope="col"
+								th:text="#{transaction.trnsferTransaction.edit.page.to}">To</th>
+							<th scope="col" th:text="#{transaction.trnsferTransaction.edit.page.sumFrom}">Sum from</th>
+							<th scope="col" th:text="#{transaction.trnsferTransaction.edit.page.sumTo}">Sum to</th>
+							
+							<th scope="col" th:text="#{transaction.trnsferTransaction.edit.page.Date}">Date
+								</th>
+							<th scope="col" th:text="#{indexPage.transaction.table.edit}">Edit</th>
+							<th scope="col" th:text="#{indexPage.transaction.table.delete}">Delete</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="transaction : ${transferTransactions}">
+							<td th:text="${transaction.fromBankAccount.name}">From bank</td>
+							<td th:text="${transaction.toBankAccount.name}">To bank</td>
+							<td th:text="${transaction.sumTransactionFrom}">Sum from</td>
+							<td th:text="${transaction.sumTransactionTo}">Sum to</td>
+							<td
+								th:text="${#dates.format(transaction.createTime, 'dd-MM-yyyy HH:MM')}">Create
+								date</td>
+							<td><a
+								th:href="@{/transfer/{id}(id=${transaction.id})}"
+								th:text="#{indexPage.transaction.table.edit}">Edit link </a></td>
+							<td><a
+								th:href="@{/transfer/delete/{id}(id=${transaction.id})}"
+								th:text="#{indexPage.transaction.table.delete}"
+								th:data-confirm-delete="#{indexPage.transaction.table.deleteAnswer}"
+								onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete
+									link </a></td>
+						</tr>
+					</tbody>
+				</table>
+				<ul class="pagination">
+					<li class="page-item"><a class="page-link"
+						th:href="@{/transfer(page=1)}">first</a></li>
+					<th:block th:each="pageLeftItem : ${pagesLeft}">
+						<li th:if="${pageLeftItem == pageNum}"
+							class="page-item active"><a class="page-link"
+							th:href="@{/transfer(page=${pageLeftItem})}"
+							th:text="${pageLeftItem}">1</a></li>
+						<th:block th:unless="${pageLeftItem == 0}">
+							<li th:unless="${pageLeftItem == pageNum}"
+								class="page-item"><a class="page-link"
+								th:href="@{/transfer(page=${pageLeftItem})}"
+								th:text="${pageLeftItem}">1</a></li>
+						</th:block>
+					</th:block>
+					<th:block th:each="pageRightItem : ${pagesRight}">
+						<li th:unless="${pageRightItem == 0}" class="page-item"><a
+							class="page-link"
+							th:href="@{/transfer(page=${pageRightItem})}"
+							th:text="${pageRightItem}">1</a></li>
+					</th:block>
+					<li class="page-item"><a class="page-link"
+						th:href="@{/transfer(page=${pageCount})}">last</a></li>
+				</ul>
+				<br /> <a class="btn btn-primary"
+					th:href="@{/transfer/0}"
+					th:text="#{indexPage.transaction.new}">Create new</a>
+			</div>
+			<br />
+
+		</div>
+	</div>
+
+	<div th:replace="fragments/scripts :: scripts">
+		<!-- скрипты для кнопок и так далее -->
+	</div>
+</body>
+</html>

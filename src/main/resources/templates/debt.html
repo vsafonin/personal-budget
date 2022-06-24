@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head th:insert="fragments/head :: header">
+<title th:text="#{indexPage.title}">Personal budget app</title>
+</head>
+<body>
+	<div class="d-flex" id="wrapper">
+		
+		<div th:replace="fragments/sidebar :: sidebar">
+			<!-- Sidebar-->
+		</div>
+		<div id="page-content-wrapper">
+			
+			<nav th:replace="fragments/navbar :: navbar">
+				<!-- Top navigation-->
+			</nav>
+			<!-- Page content-->
+			<div class="container-fluid">
+				<h4 th:text="#{indexPage.debtTransaction.decrease}">				
+				</h4>
+				<div class="container">
+					<div class="row">
+						<div class="col">
+							<label for="filter" th:text="#{indexPage.filterByBank}">Filter
+								by bank</label> <select id="filter"  class="selectpicker" data-live-search="true" data-size="5"
+								th:data-partner-filter = "${filterByPartner}"
+								th:onchange="'window.location.href = \'' + @{/debt} + '?filterByBankName=\'
+											 + this.value
+											 + \'&filterByPartner=\' + this.getAttribute(\'data-partner-filter\')
+											 '">
+								<option value="" th:text="#{indexPage.filterByBank.nothing}">Nothing
+									selected</option>
+								<option th:each="name : ${bankAccounts}" th:text="${name.name}"
+									th:selected="${name.name == filterByBank}"></option>
+							</select>
+						</div>
+						<div class="col">
+								<label for="filter" th:text="#{indexPage.filterByPartner}">Filter
+								by partner</label> <select id="filter"  class="selectpicker" data-live-search="true" data-size="5"
+								th:data-bank-filter="${filterByBank}"
+								th:onchange="'window.location.href = \'' + @{/debt} + '?filterByBankName=\'
+											 + this.getAttribute(\'data-bank-filter\')
+											 + \'&filterByPartner=\' + this.value
+											 '">
+								<option value="" th:text="#{indexPage.filterByBank.nothing}">Nothing
+									selected</option>
+								<option th:each="name : ${partners}"
+									th:text="${name.name}"
+									th:selected="${name.name == filterByPartner}"></option>
+							</select>
+						</div>
+					</div>
+
+
+
+				</div>
+				<br />
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th scope="col" th:text="#{indexPage.transaction.table.bank}">Bank</th>
+							<th scope="col"
+								th:text="#{indexPage.debtTransaction.table.partner}">Who</th>
+							<th scope="col" th:text="#{indexPage.transaction.table.sum}">Total
+								sum</th>
+							<th scope="col"
+								th:text="#{indexPage.debtTransaction.table.description}">Description</th>
+
+							<th scope="col" th:text="#{indexPage.transaction.table.date}">Date
+								when</th>
+							<th scope="col"
+								th:text="#{indexPage.debtTransaction.table.dateDue}">Date
+								due</th>
+							<th scope="col" th:text="#{indexPage.transaction.table.edit}">Edit</th>
+							<th scope="col" th:text="#{indexPage.transaction.table.delete}">Delete</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="transaction : ${debtTransactionsDecrease}">
+							<td th:text="${transaction.bankAccount.name}">bank</td>
+							<td th:text="${transaction.partner.name}">From</td>
+							<td th:text="${transaction.sumTransaction}">Total sum</td>
+							<td th:text="${transaction.description}">Description</td>
+							<td
+								th:text="${#dates.format(transaction.createTime, 'dd-MM-yyyy HH:MM')}">Create
+								date</td>
+							<td
+								th:text="${#dates.format(transaction.endDate, 'dd-MM-yyyy HH:MM')}">Create
+								date</td>
+							<td><a
+								th:href="@{/debt-transaction/{id}(id=${transaction.id})}"
+								th:text="#{indexPage.transaction.table.edit}">Edit link </a></td>
+							<td><a
+								th:href="@{/debt-transaction/delete/{id}(id=${transaction.id})}"
+								th:text="#{indexPage.transaction.table.delete}"
+								th:data-confirm-delete="#{indexPage.transaction.table.deleteAnswer}"
+								onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete
+									link </a></td>
+						</tr>
+					</tbody>
+				</table>
+				<ul class="pagination">
+					<li class="page-item"><a class="page-link"
+						th:href="@{/debt(pageDecrease=1)}">first</a></li>
+					<th:block th:each="pageLeftItem : ${pagesLeftDecrease}">
+						<li th:if="${pageLeftItem == pageNumDecrease}"
+							class="page-item active"><a class="page-link"
+							th:href="@{/debt(pageDecrease=${pageLeftItem})}"
+							th:text="${pageLeftItem}">1</a></li>
+						<th:block th:unless="${pageLeftItem == 0}">
+							<li th:unless="${pageLeftItem == pageNumDecrease}"
+								class="page-item"><a class="page-link"
+								th:href="@{/debt(pageDecrease=${pageLeftItem})}"
+								th:text="${pageLeftItem}">1</a></li>
+						</th:block>
+					</th:block>
+					<th:block th:each="pageRightItem : ${pagesRightDecrease}">
+						<li th:unless="${pageRightItem == 0}" class="page-item"><a
+							class="page-link"
+							th:href="@{/debt(pageDecrease=${pageRightItem})}"
+							th:text="${pageRightItem}">1</a></li>
+					</th:block>
+					<li class="page-item"><a class="page-link"
+						th:href="@{/debt(pageDecrease=${pageCountDecrease})}">last</a></li>
+				</ul>
+				<br /> <a class="btn btn-primary"
+					th:href="@{/debt-transaction/0(type=DECREASE)}"
+					th:text="#{indexPage.transaction.new}">Create new</a>
+			</div>
+			<br />
+			<div class="container-fluid">
+				<h4	 th:text="#{indexPage.debtTransaction.increase}" >
+					
+				</h4>
+				
+				
+				<br />
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th scope="col" th:text="#{indexPage.transaction.table.bank}">Bank</th>
+							<th scope="col"
+								th:text="#{indexPage.debtTransaction.table.partner}">Who</th>
+							<th scope="col" th:text="#{indexPage.transaction.table.sum}">Total
+								sum</th>
+							<th scope="col"
+								th:text="#{indexPage.debtTransaction.table.description}">Description</th>
+
+							<th scope="col" th:text="#{indexPage.transaction.table.date}">Date
+								when</th>
+							<th scope="col"
+								th:text="#{indexPage.debtTransaction.table.dateDue}">Date
+								due</th>
+							<th scope="col" th:text="#{indexPage.transaction.table.edit}">Edit</th>
+							<th scope="col" th:text="#{indexPage.transaction.table.delete}">Delete</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="transaction : ${debtTransactionsIncrease}">
+							<td th:text="${transaction.bankAccount.name}">bank</td>
+							<td th:text="${transaction.partner.name}">From</td>
+							<td th:text="${transaction.sumTransaction}">Total sum</td>
+							<td th:text="${transaction.description}">Description</td>
+							<td
+								th:text="${#dates.format(transaction.createTime, 'dd-MM-yyyy HH:MM')}">Create
+								date</td>
+							<td
+								th:text="${#dates.format(transaction.endDate, 'dd-MM-yyyy HH:MM')}">Create
+								date</td>
+							<td><a
+								th:href="@{/debt-transaction/{id}(id=${transaction.id})}"
+								th:text="#{indexPage.transaction.table.edit}">Edit link </a></td>
+							<td><a
+								th:href="@{/debt-transaction/delete/{id}(id=${transaction.id})}"
+								th:text="#{indexPage.transaction.table.delete}"
+								th:data-confirm-delete="#{indexPage.transaction.table.deleteAnswer}"
+								onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete
+									link </a></td>
+						</tr>
+					</tbody>
+				</table>
+				<ul class="pagination">
+					<li class="page-item"><a class="page-link"
+						th:href="@{/debt(pageIncrease=1)}">first</a></li>
+					<th:block th:each="pageLeftItem : ${pagesLeftIncrease}">
+						<li th:if="${pageLeftItem == pageNumIncrease}"
+							class="page-item active"><a class="page-link"
+							th:href="@{/debt(pageIncrease=${pageLeftItem})}"
+							th:text="${pageLeftItem}">1</a></li>
+						<th:block th:unless="${pageLeftItem == 0}">
+							<li th:unless="${pageLeftItem == pageNumIncrease}"
+								class="page-item"><a class="page-link"
+								th:href="@{/debt(pageIncrease=${pageLeftItem})}"
+								th:text="${pageLeftItem}">1</a></li>
+						</th:block>
+					</th:block>
+					<th:block th:each="pageRightItem : ${pagesRightIncrease}">
+						<li th:unless="${pageRightItem == 0}" class="page-item"><a
+							class="page-link"
+							th:href="@{/debt(pageIncrease=${pageRightItem})}"
+							th:text="${pageRightItem}">1</a></li>
+					</th:block>
+					<li class="page-item"><a class="page-link"
+						th:href="@{/debt(pageIncrease=${pageCountDecrease})}">last</a></li>
+				</ul>
+				<br /> <a class="btn btn-primary"
+					th:href="@{/debt-transaction/0(type=INCREASE)}"
+					th:text="#{indexPage.transaction.new}">Create new</a>
+			</div>
+
+		</div>
+	</div>
+
+	<div th:replace="fragments/scripts :: scripts">
+		<!-- скрипты для кнопок и так далее -->
+	</div>
+</body>
+</html>

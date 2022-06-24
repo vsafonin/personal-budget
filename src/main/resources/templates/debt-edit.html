@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head th:insert="fragments/head :: header">
+<title th:text="#{indexPage.title}">Edit debt transaction</title>
+</head>
+<body>
+	<div class="d-flex" id="wrapper">
+		<div th:replace="fragments/sidebar :: sidebar">
+			<!-- Sidebar-->
+		</div>
+		<!-- Page content wrapper-->
+		<div id="page-content-wrapper">
+			<!-- Top navigation-->
+			<nav th:replace="fragments/navbar :: navbar"></nav>
+			<form
+				th:action="@{/debt-transaction/{id}(id=${debtTransaction.id})}"
+				th:method="post" th:object="${debtTransaction}">
+				<!-- скрытые поля для сохранения элемента а не созадния дубликата при редактировании формы -->
+				<input type="hidden" th:field="*{id}" /> 
+				<input type="hidden" th:field="*{createTime}" th:unless="${debtTransaction.id == 0}" />
+				<input type="hidden" th:field="*{currency}" th:unless="${debtTransaction.id == 0}" />
+				<input type="hidden" th:field="*{typeOfOperation}" />
+				<input type="hidden" th:field="*{appUser}" th:name="appUser" />
+				<input type="hidden" th:field="*{active}"/>
+
+				<div class="form-group row gy-5">
+					<label for="bankAccountName" class="col-sm-2 col-form-label"
+						th:text="#{transaction.edit.page.bankAccount}">Bank	Account</label>
+					<div class="col-sm-10 p-1">
+						<!-- костыль с разными id для выбора сохраненного в базе select -->
+						<div th:if="${debtTransaction.id != 0}">
+							<select th:field="*{bankAccount}" class="form-control w-75"
+							size="1" aria-label="size 1 .form-select-sm example" >
+								<option th:each="bankAccountEntry : ${bankAccounts}"
+									th:value="${bankAccountEntry.id}"
+									th:text="${bankAccountEntry.name}"
+									th:selected="${bankAccountEntry == debtTransaction.bankAccount}">
+								</option>
+							</select>
+						</div>
+						<div th:if="${debtTransaction.id == 0}">
+							<select th:field="*{bankAccount}" class="form-control w-75"
+							size="1" aria-label="size 1 .form-select-sm example" >
+								<option th:if="${debtTransaction.id == 0}"
+								th:each="bankAccountEntry : ${bankAccounts}"
+								th:value="${bankAccountEntry.id}"
+								th:text="${bankAccountEntry.name}">
+								</option>
+							</select>
+						</div>
+						
+					</div>
+				</div>
+				<div class="form-group row gy-5">
+					<label for="partner" class="col-sm-2 col-form-label"
+						th:text="#{transaction.debt.edit.page.partner}">Partner</label>
+					<div class="col-sm-10 p-1">
+						<input type="text" class="form-control autoComplite w-75"
+							id="partner"
+							th:placeholder="#{transaction.debt.edit.page.partner}"
+							th:data-url="@{/api/partner}" th:field="*{partner.name}">
+					</div>
+				</div>
+				<div class="form-group row gy-5">
+					<label for="description" class="col-sm-2 col-form-label"
+						th:text="#{transaction.debt.edit.page.description}">Description</label>
+					<div class="col-sm-10 p-1">
+						<input type="text" class="form-control w-75" id="description"
+							th:placeholder="#{transaction.debt.edit.page.description}"
+							th:field="*{description}">
+					</div>
+				</div>
+				<div class="form-group row gy-5">
+					<label for="endDate" class="col-sm-2 col-form-label"
+						th:text="#{transaction.debt.edit.page.endDate}">End date</label>
+					<div class="col-sm-10 p-1">
+						<input type="date" class="form-control w-75" id="endDate"
+							th:placeholder="#{transaction.debt.edit.page.endDate}"
+							th:field="*{endDate}">
+					</div>
+					<div th:if="${#fields.hasErrors('endDate')}"
+						class="alert alert-danger">
+						<p th:errors="*{endDate}"></p>
+					</div>
+				</div>
+				<div class="form-group row gy-5">
+					<label for="sum" class="col-sm-2 col-form-label"
+						th:text="#{transaction.edit.page.sum}">Sum</label>
+					<div class="col-sm-10 p-1">
+						<input type="number" step="0.01" class="form-control w-75" id="sum"
+							th:placeholder="#{transaction.edit.page.sum}"
+							th:field="*{sumTransaction}">
+					</div>
+					<div th:if="${#fields.hasErrors('sumTransaction')}"
+						class="alert alert-danger">
+						<p th:errors="*{sumTransaction}"></p>
+					</div>
+				</div>
+				<div class="form-group row gy-5">
+					<div class="col-sm-10">
+						<button type="submit" class="btn btn-primary"
+							th:text="#{transaction.edit.page.saveBtn}">Save it</button>
+					</div>
+				</div>
+			</form>
+
+
+
+			<h4 th:text="#{indexPage.debtTransaction.paymentList}"> Payment list</h4>					
+			
+				<table class="table table-hover">
+						<thead>
+							<tr>
+								<th scope="col" th:text="#{indexPage.transaction.table.sum}">Total sum</th>
+								<th scope="col" th:text="#{indexPage.transaction.table.date}">Date	when</th>
+								<th scope="col" th:text="#{indexPage.transaction.table.edit}">Edit</th>
+								<th scope="col" th:text="#{indexPage.transaction.table.delete}">Delete</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr th:each="payment : ${listOfPayments}">
+								<td th:text="${payment.paySum}">Total sum</td>
+								<td th:text="${#dates.format(payment.payDate, 'dd-MM-yyyy HH:MM')}">Create date</td>
+								<td><a
+								th:href="@{/debt-transaction/payment/{id}(id=${payment.id},dtid=${debtTransaction.id})}"
+								th:text="#{indexPage.transaction.table.edit}">Edit link </a></td>
+								<td><a
+								th:href="@{/debt-transaction/payment/delete/{id}(id=${payment.id})}"
+								th:text="#{indexPage.transaction.table.delete}"
+								th:data-confirm-delete="#{indexPage.transaction.table.deleteAnswer}"
+								onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete
+										link </a></td>
+							</tr>
+						</tbody>
+					</table>
+					<a class="btn btn-primary"
+					th:href="@{/debt-transaction/payment/0(dtid=${debtTransaction.id})}"
+					th:text="#{indexPage.transaction.new}">Create new payment</a>
+				</div>
+		</div>
+	<div th:replace="fragments/scripts :: scripts">
+		<!-- скрипты для кнопок и так далее -->
+	</div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head th:insert="fragments/head :: header">
+<title th:text="#{indexPage.title}">Personal budget app edit
+	bank account</title>
+</head>
+<body>
+	<div class="d-flex" id="wrapper">
+		<!-- Sidebar-->
+		<div th:replace="fragments/sidebar :: sidebar">
+			<!-- меню с лева -->
+		</div>
+		<!-- Page content wrapper-->
+		<div id="page-content-wrapper">
+			<!-- Top navigation-->
+			<nav th:replace="fragments/navbar :: navbar"></nav>
+			<!-- контент страницы личного кабинета пользователя -->
+			<form
+				th:action="@{/salary-transaction/{id}(id=${salaryTransaction.id})}"
+				th:method="post" th:object="${salaryTransaction}">
+				<!-- скрытые поля для сохранения элемента а не созадния дубликата при редактировании формы -->
+				<input type="hidden" th:field="*{id}" /> 
+				<input type="hidden" th:if="${salaryTransaction.id != 0}" th:field="*{createTime}" /> 
+				<input type="hidden" th:field="*{currency}"
+					th:if="${salaryTransaction.id != 0}" /> 
+				<input type="hidden"
+					th:field="*{appUser}" th:name="appUser" />
+
+				<div class="form-group row gy-5">
+					<label for="bankAccountName" class="col-sm-2 col-form-label"
+						th:text="#{transaction.edit.page.bankAccount}">Bank
+						Account</label>
+					<div class="col-sm-10 p-1">
+						<select th:field="*{bankAccount}" class="form-control w-75"
+							size="1" aria-label="size 1 .form-select-sm example" />
+						<option th:if="${salaryTransaction.id != 0}"
+							th:each="bankAccountEntry : ${bankAccounts}"
+							th:value="${bankAccountEntry.id}"
+							th:text="${bankAccountEntry.name}"
+							th:selected="${bankAccountEntry == salaryTransaction.bankAccount}"></option>
+						<option th:if="${salaryTransaction.id == 0}" th:each="bankAccountEntry : ${bankAccounts}"
+							th:value="${bankAccountEntry.id}"
+							th:text="${bankAccountEntry.name}"></option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group row gy-5">
+					<label for="partner" class="col-sm-2 col-form-label"
+						th:text="#{transaction.salary.edit.page.partner}">Partner</label>
+					<div class="col-sm-10 p-1">
+						<input type="text" class="form-control w-75 autoComplite" id="partner"
+							th:placeholder="#{transaction.salary.edit.page.partner}"
+							th:data-url="@{/api/partner}"
+							th:field="*{partner.name}">
+					</div>
+				</div>
+				<div class="form-group row gy-5">
+					<label for="description" class="col-sm-2 col-form-label"
+						th:text="#{transaction.salary.edit.page.description}">Description</label>
+					<div class="col-sm-10 p-1">
+						<input type="text" class="form-control w-75" id="description"
+							th:placeholder="#{transaction.salary.edit.page.description}"
+							th:field="*{description}">
+					</div>
+				</div>
+				<div class="form-group row gy-5">
+					<label for="sum" class="col-sm-2 col-form-label"
+						th:text="#{transaction.edit.page.sum}">Sum</label>
+					<div class="col-sm-10 p-1">
+						<input type="number" step="0.01" class="form-control w-75" id="sum"
+							th:placeholder="#{transaction.edit.page.sum}"
+							th:field="*{sumTransaction}">
+					</div>
+					<div th:if="${#fields.hasErrors('sumTransaction')}"
+						class="alert alert-danger">
+						<p th:errors="*{sumTransaction}"></p>
+					</div>
+				</div>
+				<div class="form-group row gy-5">
+					<div class="col-sm-10">
+						<button type="submit" class="btn btn-primary"
+							th:text="#{transaction.edit.page.saveBtn}">Save it</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+	<div th:replace="fragments/scripts :: scripts">
+		<!-- скрипты для кнопок и так далее -->
+	</div>
+</body>
+</html>
