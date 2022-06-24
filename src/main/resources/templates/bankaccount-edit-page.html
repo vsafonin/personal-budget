@@ -92,7 +92,7 @@
 							aria-label="size 3 .form-select-sm example" />
 						<option th:each="currency : ${currencySet}" th:value="${currency}"
 							th:text="${currency.currencyCode}"
-							th:selected="${currency.numericCode==bankAccount.currency.numericCode}"></option>
+							th:selected="${currency==bankAccount.currency}"></option>
 						</select>
 					</div>
 				</div>
@@ -138,10 +138,10 @@
 						<td
 							th:text="${#dates.format(transaction.createTime, 'dd-MM-yyyy HH:MM')}">create
 							time</td>
-						<td><a th:href="@{/transaction/{id}(id=${transaction.id})}"
+						<td><a th:href="@{/adjustment-transaction/{id}(id=${transaction.id})}"
 							th:text="#{indexPage.transaction.table.edit}">Edit link </a></td>
 						<td><a
-							th:href="@{/transaction/delete/{id}(id=${transaction.id})}"
+							th:href="@{/adjustment-transaction/delete/{id}(id=${transaction.id})}"
 							th:text="#{indexPage.transaction.table.delete}"
 							th:data-confirm-delete="#{indexPage.transaction.table.deleteAnswer}"
 							onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete

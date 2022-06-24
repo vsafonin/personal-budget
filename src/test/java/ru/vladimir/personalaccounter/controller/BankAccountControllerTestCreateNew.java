@@ -76,13 +76,14 @@ class BankAccountControllerTestCreateNew {
 	@WithMockUser(username = "pupa", roles = "user", password = "123")
 	void testSaveNewBankAccountShouldBeOk() throws Exception {
 		AppUser theUser = new AppUser("pupa", "pupa", "123", "123", "pupa@mail.ru", true);
+		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
 		BankAccount theBankAccount = new BankAccount();
 		theBankAccount.setAppUser(theUser);
 		theBankAccount.setName("test");
 		theBankAccount.setBalance(BigDecimal.valueOf(100));
 		theBankAccount.setCurrency(Currency.getInstance("RUB"));
 		mockMvc.perform(
-				post("/bank-account/0").with(user(theUser)).flashAttr("bankAccount", theBankAccount).with(csrf()))
+				post("/bank-account/0").flashAttr("bankAccount", theBankAccount).with(csrf()))
 				.andExpect(redirectedUrl("/"));
 
 		verify(accountService, times(1)).save(theBankAccount);

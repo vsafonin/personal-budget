@@ -85,7 +85,7 @@ public class CurrencyConverterClientImpl implements CurrencyConverterClient {
 	}
 	
 	/**
-	 * convert amount in another currency to rubles
+	 * converts amount in another currency to rubles
 	 * @param currenciesFromDocument - list of currencies in the NodeList format
 	 * @param currencyFromConvert - the currency what we want to convert
 	 * @param sum - the amount in another currency what we want to convert

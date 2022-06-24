@@ -39,6 +39,7 @@ import ru.vladimir.personalaccounter.service.DebtTransactionService;
 import ru.vladimir.personalaccounter.service.ProductService;
 import ru.vladimir.personalaccounter.service.PurchaseTransactionService;
 import ru.vladimir.personalaccounter.service.SalaryTransactionService;
+import ru.vladimir.personalaccounter.service.TransferTransactionService;
 import ru.vladimir.personalaccounter.service.UserService;
 
 @ExtendWith(SpringExtension.class)
@@ -104,6 +105,9 @@ public class RegistrationControllerTest {
     @MockBean
     private ProductService productService;
     
+    @MockBean
+    private TransferTransactionService transferTransactionService;
+    
     public RegistrationControllerTest() {
     }
 
@@ -139,10 +143,10 @@ public class RegistrationControllerTest {
         testUser.setPasswordConfirm("213");
         testUser.setEmail("pupamail@mail.ru");
 
-        mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/login"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/login"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        mockMvc.perform(MockMvcRequestBuilders.post("http://localhost:8080/registration")
+        mockMvc.perform(MockMvcRequestBuilders.post("/registration")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                 .param("username", testUser.getUsername())
                 .param("displayName", testUser.getDisplayName())

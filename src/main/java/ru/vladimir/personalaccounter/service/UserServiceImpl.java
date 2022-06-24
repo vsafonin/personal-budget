@@ -42,6 +42,7 @@ import ru.vladimir.personalaccounter.event.EmailEvent;
 import ru.vladimir.personalaccounter.exception.AppUserJwtTokenNotFoundExp;
 import ru.vladimir.personalaccounter.exception.AuthContextIsNullExcp;
 import ru.vladimir.personalaccounter.exception.BadAppUserFormatException;
+import ru.vladimir.personalaccounter.exception.UserGetDataSecurityExp;
 import ru.vladimir.personalaccounter.methods.JwtProvider;
 import ru.vladimir.personalaccounter.model.EmailModel;
 import ru.vladimir.personalaccounter.repository.ActivationEmailRepository;
@@ -52,7 +53,8 @@ import ru.vladimir.personalaccounter.repository.UserRepository;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
-
+	private final String ADMIN_ROLE_NAME = "ADMIN";
+	
 	@Autowired
 	private UserRepository userRepository;
 
@@ -82,6 +84,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 	
 	
 	private AppUser demoUser;
+	
 	
 	@Override
 	public AppUser findByUsername(String username) {
@@ -120,6 +123,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 				activationUuid.getUuid(),
 				"registration"),TypeOfEmails.REGISTRATION_EMAIL));
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
+		save(user);
 	}
 
 	@Override
@@ -143,6 +147,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
 	@Override
 	public Optional<AppUser> findById(Long userId) {
+		AppUser currentAppUser = getCurrentAppUserFromContextOrCreateDemoUser();
+		if (currentAppUser.getId() != userId) {
+			 Authorities adminAuthorities = roleRepository.findByName(ADMIN_ROLE_NAME);
+			 if (!currentAppUser.getAuthorities().contains(adminAuthorities)) {
+				 throw new UserGetDataSecurityExp("Someone trying get user information info but not the owner or admin");
+			 }
+		}
 		return userRepository.findById(userId);
 
 	}

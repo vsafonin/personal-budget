@@ -12,6 +12,7 @@ import java.util.Locale;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -47,26 +48,38 @@ public class RegistrationControllerIntegrationTest {
     	users.stream().forEach(u -> userService.deleteUser(u));
     }
     
+    private AppUser theAppUser;
+    
+    @BeforeEach
+    private void createUser() {
+    	theAppUser = new AppUser();
+    	theAppUser.setUsername("pupa");
+    	theAppUser.setDisplayName("pupa");
+    	theAppUser.setPassword("aSzXdF7wpBwvZbkK");
+    	theAppUser.setPasswordConfirm("aSzXdF7wpBwvZbkK");
+    	theAppUser.setEmail("pupamail@mail.ru");
+    	
+    }
+    
+    @AfterEach
+    private void deleteUser() {
+    	userService.deleteUser(theAppUser);
+    }
+    
     @Test
     public void test_valid_user_should_be_ok() throws Exception {
-        AppUser testUser = new AppUser();
-        testUser.setUsername("pupa");
-        testUser.setDisplayName("pupa");
-        testUser.setPassword("aSzXdF7wpBwvZbkK");
-        testUser.setPasswordConfirm("aSzXdF7wpBwvZbkK");
-        testUser.setEmail("pupamail@mail.ru");
 
         mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/login"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         mockMvc.perform(MockMvcRequestBuilders.post("http://localhost:8080/registration")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                .param("username", testUser.getUsername())
-                .param("displayName", testUser.getDisplayName())
-                .param("email", testUser.getEmail())
-                .param("password", testUser.getPassword())
-                .param("passwordConfirm", testUser.getPasswordConfirm())
-                .flashAttr("newUser", testUser)
+                .param("username", theAppUser.getUsername())
+                .param("displayName", theAppUser.getDisplayName())
+                .param("email", theAppUser.getEmail())
+                .param("password", theAppUser.getPassword())
+                .param("passwordConfirm", theAppUser.getPasswordConfirm())
+                .flashAttr("newUser", theAppUser)
                 .with(csrf())
         )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -74,13 +87,11 @@ public class RegistrationControllerIntegrationTest {
         
         
         
-        AppUser userFromDb = userService.findByUsername(testUser.getUsername());
+        AppUser userFromDb = userService.findByUsername(theAppUser.getUsername());
         if (userFromDb == null || userFromDb.isEnabled() == true) {
             Assertions.fail();
         }
         
-        //delete user
-        userService.deleteUser(userFromDb);
     }
     
     /**
@@ -91,31 +102,26 @@ public class RegistrationControllerIntegrationTest {
      */
     @Test
     public void test_activateUser_should_be_ok() throws Exception {
-    	String password = "LIpHVscoXmMWAsHS";
-    	AppUser theUser = new AppUser();
-    	theUser.setUsername("pupa");
-    	theUser.setDisplayName("pupa");
-    	theUser.setPassword(password);
-    	theUser.setPasswordConfirm(password);
-    	theUser.setEmail("vsafonin@gmail.com");
     	
     	try {
-    		userService.register(theUser, Locale.ENGLISH);
+    		userService.register(theAppUser, Locale.ENGLISH);
     	}
     	catch (BadAppUserFormatException exp){
     		System.out.println("неверный формат заполнения пользователя.");    		
     	}
-    	String uuid = theUser.getActivationLink().getUuid();
-    	mockMvc.perform(get("http://localhost:8080/registration/" + uuid))
+    	String uuid = theAppUser.getActivationLink().getUuid();
+    	mockMvc.perform(get("/registration/" + uuid))
     		.andExpect(redirectedUrl("/login"));
     	
-    	AppUser userInDb = userService.findByUsername(theUser.getUsername());
+    	AppUser userInDb = userService.findByUsername(theAppUser.getUsername());
     	if (userInDb == null) fail("это не возможно, пользователь не существует");
     	if (!userInDb.isEnabled()) fail("это не возможно, пользователь должен быть активирован");
     	
     	
-    	mockMvc.perform(formLogin("/login").user(theUser.getUsername()).password(password))
+    	mockMvc.perform(formLogin("/login").user(theAppUser.getUsername()).password(theAppUser.getPassword()))
     		.andExpect(status().is3xxRedirection()); //should redirect to /
+    	
+    	
     }
     
 

@@ -71,9 +71,6 @@ public class UserServiceImplTest {
 
         Mockito.verify(eventPublisher, Mockito.times(1)).publishEvent(ArgumentMatchers.any(EmailEvent.class));
         
-        //delete user
-        userService.deleteUser(theUser);
-
     }
     
     @Test

@@ -69,7 +69,10 @@ public class AppUser implements Serializable, UserDetails {
 
 	@Transient
 	private String passwordConfirm;
-
+	
+	@Transient
+	private String passwordInputField;
+	
 	@Column(name = "email", unique = true)
 	@Email(message = "#{user.vlidation.message.email}")
 	@UniqueEmail(message = "#{user.vlidation.message.emailUnique}")
@@ -98,7 +101,7 @@ public class AppUser implements Serializable, UserDetails {
 	
 	@Getter
 	@Setter
-	@OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<AppUserJwtToken> appUserJwtTokens;
 	
 	public AppUser() {

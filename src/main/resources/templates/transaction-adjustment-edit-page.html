@@ -15,7 +15,7 @@
 				<!-- Top navigation-->
 				<nav th:replace="fragments/navbar :: navbar"></nav>
 				<!-- контент страницы личного кабинета пользователя -->
-				<form th:action="@{/transaction/{id}(id=${transaction.id})}" th:method="post"
+				<form th:action="@{/adjustment-transaction/{id}(id=${transaction.id})}" th:method="post"
 				th:object="${transaction}">
 					<!-- скрытые поля для сохранения элемента а не созадния дубликата при редактировании формы -->
 					<input type="hidden" th:field="*{id}"/>

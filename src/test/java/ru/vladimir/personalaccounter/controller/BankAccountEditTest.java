@@ -139,7 +139,7 @@ class BankAccountEditTest {
 		when(bankAccountService.getBankAccountById(any())).thenReturn(theBankAccount);
 		mockMvc.perform(
 				post("/bank-account/1").flashAttr("bankAccount", theBankAccount).with(csrf()).with(user(theUser)))
-				.andExpect(model().hasNoErrors()).andExpect(redirectedUrl("/bank-account/1"));
+				.andExpect(model().hasNoErrors()).andExpect(redirectedUrl("/bank-account/1?success=true"));
 
 		verify(bankAccountService, times(1)).save(theBankAccount);
 
@@ -180,7 +180,7 @@ class BankAccountEditTest {
 
 		mockMvc.perform(
 				post("/bank-account/1").flashAttr("bankAccount", theBankAccount).with(csrf()).with(user(theUser)))
-				.andExpect(model().hasNoErrors()).andExpect(redirectedUrl("/bank-account/1"));
+				.andExpect(model().hasNoErrors()).andExpect(redirectedUrl("/bank-account/1?success=true"));
 
 		verify(bankAccountService, times(1)).save(theBankAccount);
 		assertFalse(theBankAccount.getTransactions() == null);
@@ -201,12 +201,12 @@ class BankAccountEditTest {
 		theBankAccount.setCurrency(Currency.getInstance("RUB"));
 		theBankAccount.setAppUser(theUser);
 		BankAccount oldBankAccount = new BankAccount(theBankAccount);
-		theBankAccount.setBalance(BigDecimal.valueOf(100));
+		oldBankAccount.setBalance(BigDecimal.valueOf(50));
 		when(bankAccountService.getBankAccountById(any())).thenReturn(oldBankAccount);
 
 		mockMvc.perform(
 				post("/bank-account/1").flashAttr("bankAccount", theBankAccount).with(csrf()).with(user(theUser)))
-				.andExpect(model().hasNoErrors()).andExpect(redirectedUrl("/bank-account/1"));
+				.andExpect(model().hasNoErrors()).andExpect(redirectedUrl("/bank-account/1?success=true"));
 
 		verify(bankAccountService, times(1)).save(theBankAccount);
 		assertFalse(theBankAccount.getTransactions() == null);

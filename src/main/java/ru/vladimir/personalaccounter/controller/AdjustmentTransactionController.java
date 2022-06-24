@@ -11,12 +11,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import ru.vladimir.personalaccounter.entity.AdjustmentTransaction;
-import ru.vladimir.personalaccounter.entity.AppUser;
-import ru.vladimir.personalaccounter.exception.UserGetDataSecurityExp;
-import ru.vladimir.personalaccounter.exception.UserNotFoundException;
 import ru.vladimir.personalaccounter.exception.UsrTransactionNotFoundExp;
 import ru.vladimir.personalaccounter.service.AdjustmentTransactionService;
-import ru.vladimir.personalaccounter.service.UserService;
 /**
  * The Controller for work with Adjustment Transaction Entity over web UI.
  * <p>
@@ -31,18 +27,6 @@ public class AdjustmentTransactionController {
 	@Autowired
 	private AdjustmentTransactionService transactionService;
 	
-	
-	@Autowired
-	private UserService userService;
-	
-	/**
-	 * Handles "/adjustment-transaction/{id}" and return HTML page with new or exist Adjustment transaction entity 
-	 * @param id - Adjustment Transaction id, user can't create Adjustment transaction, 
-	 * this transaction creates automatically
-	 * when a user changes their bank account balance
-	 * @param model
-	 * @return -  Adjustment Transaction Account edit HTML page.
-	 */
 	@GetMapping("/adjustment-transaction/{id}")
 	public String getTransaction(@PathVariable("id") Long id, Model model) {
 		//get transaction by id
@@ -97,20 +81,12 @@ public class AdjustmentTransactionController {
 	 * @return - if no errors, redirects to /bank-account/{id} where id is bankAccount 
 	 * that was owner of this transaction
 	 */
-	@GetMapping("/transaction/delete/{id}")
+	@GetMapping("/adjustment-transaction/delete/{id}")
 	public String deleteTransaction(@PathVariable("id") Long id	) {
-		//check user right
-		AppUser appUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
-		if (appUser == null) {
-			throw new UserNotFoundException("user must be being");
-		}
 		//get transaction
 		AdjustmentTransaction adjustmentTransaction = transactionService.getTransactioById(id);
 		if (adjustmentTransaction == null) {
 			throw new UsrTransactionNotFoundExp();
-		}
-		if (!adjustmentTransaction.getAppUser().equals(appUser)) {
-			throw new UserGetDataSecurityExp("someone want to get transaction, but he isn't owner ");
 		}
 		//delete it
 		transactionService.delete(adjustmentTransaction);

@@ -7,6 +7,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
 import javax.validation.Validator;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -68,133 +70,59 @@ public class AppUserController {
 		return "user-profile";
 	}
 
-	//TODO ИСПРАВИТЬ ЭТО, ЭТО передаваться должен пользователь с thymeleaf а не вот это вот все
 	/**
-	 * controller change user
+	 * This controller save changed user to DB. First checks user password, next validates user fields, and if everything is OK
+	 * call userService for save it.
+	 * If user change email, first we are send to new email address activation link, and set old email address to appUser.email back.
+	 * If user changing password, first we are encode password via PasswordEncode, and set this value to user password field.
+	 * @param changePassword - if user wants to change password, he must to set changePassword radioButton, default dalue is off.
 	 */
 	@PostMapping(value = "/user/{id}")
-	public String userChange(@PathVariable(name = "id") String userId,
-			@ModelAttribute("username") String username,
-			@ModelAttribute("displayName") String displayName,
-			@ModelAttribute("email") String email,
+	public String userChange(@PathVariable(name = "id") long userId,
+			@Valid @ModelAttribute("user") AppUser theAppUser,
+			BindingResult bindingResult,
 			@RequestParam(value = "changePassword", defaultValue = "off") String changePassword,
-			@ModelAttribute("oldPassword") String oldPassword,
-			@ModelAttribute("newPassword") String newPassword,
-			@ModelAttribute("confirmPassword") String confirmPassword,
 			final Model model,
 			Locale locale) {
-		// secondary fields
-		boolean emailChanged = false;
-		String oldEmail = null;
-		
-		// check old password with new
 		// get not modified user
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String oldUserName = authentication.getName();
-		AppUser oldUser = userService.findByUsername(oldUserName);
+		AppUser oldAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
 		
-		if (oldUser == null) {
+		if (oldAppUser == null) {
 			throw new RuntimeException("User not found from current contex, but it inpossible");
 		}
 		
-		model.addAttribute("user", oldUser);
-		
-		if (!passwordEncoder.matches(oldPassword, oldUser.getPassword())) {
-			model.addAttribute("errorOldPassword", true);
+		if (!passwordEncoder.matches(theAppUser.getPasswordInputField(), oldAppUser.getPassword())) {
+			bindingResult.rejectValue("passwordInputField", "error.oldpassword", "password is wrong");
 			return "user-profile"; 
 		}
 		
-		Set<ConstraintViolation<AppUser>> violation = null;
 		
-		// check user change name
-		if (!oldUser.getUsername().equals(username)) {
-			oldUser.setUsername(username);
-			violation = validateField(violation,oldUser,"username");
-		}
-		//check user change displayName
-		if (!oldUser.getDisplayName().equals(displayName)) {
-			oldUser.setDisplayName(displayName);
-			violation = validateField(violation,oldUser,"displayName");
-		}
-		
-		// check my be user change email
-		if (!oldUser.getEmail().equals(email)) {
-			emailChanged = true;
-			oldEmail = oldUser.getEmail();
-			oldUser.setEmail(email);
-			violation = validateField(violation,oldUser,"email");			
-		}
-		// check user change password
-		if (changePassword.equals("on")) {
-			oldUser.setPassword(newPassword);
-			oldUser.setPasswordConfirm(confirmPassword);
-			violation = validateField(violation,oldUser,"password");			
-		}
-		else {
-			//set confirm password, this is kludge for fix validation password and confirm,
-			//cause user not persist confirm password in db
-			oldUser.setPasswordConfirm(oldUser.getPassword());
-		}
-		// validate user
-		
-		if (violation != null && !violation.isEmpty()) {
-			//add to bindingresult error
-			for (ConstraintViolation<AppUser> constraintViolation: violation) {
-				model.addAttribute("err" + constraintViolation.getPropertyPath().toString()
-						,constraintViolation.getMessage());
-			}
-			//i can't resolve question with bindindResult and
-			//show errors in thymeleaf. If i ever find out how i solve my answer i fix it
-			//FIXIT
-			if (changePassword.equals("on")) {
-				if (newPassword != null && !newPassword.equals(confirmPassword)) {
-					model.addAttribute("errConfirmPassword", true);
-				}
-			}
+		//check username, displayname and email address
+		if (bindingResult.hasFieldErrors("username") || bindingResult.hasFieldErrors("displayName") || 
+				bindingResult.hasFieldErrors("email")) {
 			return "user-profile";
 		}
-		
-		if (emailChanged) {
-			//send activation link
-			userService.changeEmail(email, locale);
-
-			//add param to returned page
-			model.addAttribute("emailChanged", emailChanged);
-			
-			//return old email, we are change it when user activate new Email
-			oldUser.setEmail(oldEmail);
-		}
-		//encode user password
 		if (changePassword.equals("on")) {
-			oldUser.setPassword(passwordEncoder.encode(newPassword));
+			if (bindingResult.hasFieldErrors("password")) {
+				return "user-profile";
+			}
+			theAppUser.setPassword(passwordEncoder.encode(theAppUser.getPassword()));
 		}
-		
-		//save user
-		userService.save(oldUser);
-				
+		/*
+		 * if user changed email, we are send to new email activation link for activation,
+		 * before it, set old email.
+		 */
+		if (!oldAppUser.getEmail().equals(theAppUser.getEmail())) {
+			userService.changeEmail(theAppUser.getEmail(), locale);
+			model.addAttribute("emailChanged", true);
+			theAppUser.setEmail(oldAppUser.getEmail());
+		}
+		userService.save(theAppUser);				
 		
 		// redirect back to user profile with message success changes
 		model.addAttribute("success", true);
 		return "user-profile";
 	}
-	
-	/**
-	 *helper method for validate field and add to set
-	 * @param violation - Set of violations for current user
-	 * @param the oldUser that we are validating
-	 * @param fieldName 
-	 * @return modified set
-	 */
-	private Set<ConstraintViolation<AppUser>> validateField(Set<ConstraintViolation<AppUser>> violation, AppUser oldUser, String fieldName) {
-		if (violation == null) {
-			violation = validator.validateProperty(oldUser, fieldName);
-		}
-		else {
-			violation.addAll(validator.validateProperty(oldUser, fieldName));
-		}
-		return violation;
-	}
-	
 	
 	/**
 	 * Handles request to "/email-changing/{uuid}" and if OK save new email address to user field.

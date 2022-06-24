@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.NonNull;
 import ru.vladimir.personalaccounter.entity.AdjustmentTransaction;
+import ru.vladimir.personalaccounter.entity.AppUser;
 import ru.vladimir.personalaccounter.entity.BankAccount;
 import ru.vladimir.personalaccounter.enums.TypeOfOperation;
 import ru.vladimir.personalaccounter.exception.UsrTransactionNotFoundExp;
@@ -17,22 +18,27 @@ import ru.vladimir.personalaccounter.repository.AdjustmentTransactionRepository;
 public class AdjustmentTransactionServiceImpl implements AdjustmentTransactionService {
 
 	@Autowired
-	private AdjustmentTransactionRepository repository;
+	private AdjustmentTransactionRepository adjustmentTransactionRepository;
 	
 	@Autowired
 	private BankAccountService accountService;
 	
+	@Autowired
+	private UserService userService;
+	
 	@Override
 	public List<AdjustmentTransaction> getTransactions(BankAccount bankAccount) {		
-		return repository.getAll(bankAccount);
+		return adjustmentTransactionRepository.getAll(bankAccount);
 	}
 
 	@Override
 	public AdjustmentTransaction getTransactioById(Long id) {
-            Optional<AdjustmentTransaction> usrTransaction =  repository.findById(id);
+			AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
+            Optional<AdjustmentTransaction> usrTransaction =  adjustmentTransactionRepository.findById(theAppUser,id);
             if (usrTransaction.isPresent()) {
-                return usrTransaction.get();
+            	return usrTransaction.get();
             }
+            
             throw new UsrTransactionNotFoundExp();
 	}
 
@@ -50,7 +56,7 @@ public class AdjustmentTransactionServiceImpl implements AdjustmentTransactionSe
 			bankAccount.setBalance(bankAccount.getBalance().subtract(transaction.getSumTransaction()));
 		}
 		accountService.save(bankAccount);
-		repository.save(transaction);		
+		adjustmentTransactionRepository.save(transaction);		
 	}
 
 	@Override
@@ -68,7 +74,7 @@ public class AdjustmentTransactionServiceImpl implements AdjustmentTransactionSe
 		}
 		accountService.save(bankAccount);
 		
-		repository.delete(transaction);
+		adjustmentTransactionRepository.delete(transaction);
 	}
 
 	

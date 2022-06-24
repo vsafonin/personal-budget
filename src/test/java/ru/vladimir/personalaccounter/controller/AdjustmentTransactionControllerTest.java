@@ -60,47 +60,37 @@ class AdjustmentTransactionControllerTest {
 		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
 
 	}
-	
+	/*
+	 * Тестирую что можно запросить страницу с транзакциями корректировок
+	 */
 	@Test
 	@WithMockUser(roles = "user", username = "pupa")
 	void testGetTransactionShouldBeOk() throws Exception {
-		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
-		BankAccount theTestBankAccount = new BankAccount("test", BigDecimal.TEN, "test bank", theTestUser, Currency.getInstance("RUB"));
-		AdjustmentTransaction usrTransaction = new AdjustmentTransaction();
-		usrTransaction.setAppUser(theTestUser);
-		usrTransaction.setBankAccount(theTestBankAccount);
-		usrTransaction.setTypeOfOperation(TypeOfOperation.DECREASE);
-//		usrTransaction.setTypeOfTransaction(TypeOfTransaction.ADJUSTMENT);
-		usrTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
-		usrTransaction.setSumTransaction(BigDecimal.TEN);
+
+		when(transactionService.getTransactioById(1L)).thenReturn(new AdjustmentTransaction());
 		
-		when(transactionService.getTransactioById(1L)).thenReturn(usrTransaction);
-		
-		mockMvc.perform(get("/transaction/1").with(user(theTestUser)))
+		mockMvc.perform(get("/adjustment-transaction/1"))
 			.andExpect(status().isOk())
 			.andExpect(view().name("transaction-adjustment-edit-page"));
 	}
 	
+	/*
+	 * тестирую что если пользователь запросит транзакцию корректировок,
+	 * которой  нет получит сообщение NOT FOUND
+	 */
 	@Test
+	@WithMockUser(roles = "user", username = "pupa")
 	void testGetTransactionShouldBeFailBadUser() throws Exception {
-		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
-		AppUser theBadUser = new AppUser("bad","user","123","123","pupa@mail.ru",true);
-		BankAccount theTestBankAccount = new BankAccount("test", BigDecimal.TEN, "test bank", theTestUser, Currency.getInstance("RUB"));
-		AdjustmentTransaction usrTransaction = new AdjustmentTransaction();
-		usrTransaction.setAppUser(theBadUser);
-		usrTransaction.setBankAccount(theTestBankAccount);
-		usrTransaction.setTypeOfOperation(TypeOfOperation.DECREASE);
-//		usrTransaction.setTypeOfTransaction(TypeOfTransaction.ADJUSTMENT);
-		usrTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
-		usrTransaction.setSumTransaction(BigDecimal.TEN);
 		
-		when(transactionService.getTransactioById(1L)).thenReturn(usrTransaction);
+		when(transactionService.getTransactioById(1L)).thenReturn(null);
 		
-		
-		mockMvc.perform(get("/transaction/1").with(user(theBadUser)))
-			.andExpect(status().isForbidden());
+		mockMvc.perform(get("/adjustment-transaction/1"))
+			.andExpect(status().isNotFound());
 	}
-	
+
+	/*
+	 * тестирую что можно сохранить изменения транзакции c типом Decrease
+	 */
 	@Test
 	@WithMockUser(roles = "user", username = "pupa")
 	void testPostTransactionEditDecreaseAdjustmentShouldBeOk() throws Exception {
@@ -110,7 +100,6 @@ class AdjustmentTransactionControllerTest {
 		usrTransaction.setAppUser(theTestUser);
 		usrTransaction.setBankAccount(theTestBankAccount);
 		usrTransaction.setTypeOfOperation(TypeOfOperation.DECREASE);
-//		usrTransaction.setTypeOfTransaction(TypeOfTransaction.ADJUSTMENT);
 		usrTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
 		usrTransaction.setSumTransaction(BigDecimal.TEN);
 		
@@ -118,7 +107,8 @@ class AdjustmentTransactionControllerTest {
 		newUsrTransaction.setSumTransaction(BigDecimal.valueOf(40));
 		
 		when(transactionService.getTransactioById(1L)).thenReturn(usrTransaction);
-		mockMvc.perform(post("/transaction/1").with(csrf()).with(user(theTestUser))
+		
+		mockMvc.perform(post("/adjustment-transaction/1").with(csrf())
 				.flashAttr("transaction", newUsrTransaction)
 				)
 		//.andExpect(status().isOk())
@@ -126,6 +116,10 @@ class AdjustmentTransactionControllerTest {
 		
 		verify(transactionService,times(1)).save(newUsrTransaction);
 	}
+	
+	/*
+	 * тестирую что можно сохранить изменения транзакции с типом Increse
+	 */
 	@Test
 	@WithMockUser(roles = "user", username = "pupa")
 	void testPostTransactionEditIncreaseAdjustmentShouldBeOk() throws Exception {
@@ -135,7 +129,6 @@ class AdjustmentTransactionControllerTest {
 		usrTransaction.setAppUser(theTestUser);
 		usrTransaction.setBankAccount(theTestBankAccount);
 		usrTransaction.setTypeOfOperation(TypeOfOperation.INCREASE);
-//		usrTransaction.setTypeOfTransaction(TypeOfTransaction.ADJUSTMENT);
 		usrTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
 		usrTransaction.setSumTransaction(BigDecimal.TEN);
 		
@@ -143,113 +136,67 @@ class AdjustmentTransactionControllerTest {
 		newUsrTransaction.setSumTransaction(BigDecimal.valueOf(40));
 		
 		when(transactionService.getTransactioById(1L)).thenReturn(usrTransaction);
-		mockMvc.perform(post("/transaction/1").with(csrf()).with(user(theTestUser))
+		mockMvc.perform(post("/adjustment-transaction/1").with(csrf())
 				.flashAttr("transaction", newUsrTransaction)
 				)
-		//.andExpect(status().isOk())
 		.andExpect(redirectedUrl("/bank-account/" + theTestBankAccount.getId()));
 		
 		verify(transactionService,times(1)).save(newUsrTransaction);
 	}
+	
+	/*
+	 * тестирую что при попытке сохранить транзакции которой не существует или другой владелец
+	 * получу сообщение NOT FOUND
+	 */
 	@Test
 	@WithMockUser(roles = "user", username = "pupa")
 	void testPostTransactionEditShouldBeFailBadUser() throws Exception {
-		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
-		AppUser badTestUser = new AppUser("bed","user","123","123","pupa@mail.ru",true);
-		BankAccount theTestBankAccount = new BankAccount("test", BigDecimal.TEN, "test bank", theTestUser, Currency.getInstance("RUB"));
-		AdjustmentTransaction usrTransaction = new AdjustmentTransaction();
-		usrTransaction.setAppUser(badTestUser);
-		usrTransaction.setBankAccount(theTestBankAccount);
-		usrTransaction.setTypeOfOperation(TypeOfOperation.INCREASE);
-//		usrTransaction.setTypeOfTransaction(TypeOfTransaction.ADJUSTMENT);
-		usrTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
-		usrTransaction.setSumTransaction(BigDecimal.TEN);
-		
-		AdjustmentTransaction newUsrTransaction = (AdjustmentTransaction) usrTransaction.clone();
-		newUsrTransaction.setSumTransaction(BigDecimal.valueOf(40));
-		
-		when(transactionService.getTransactioById(1L)).thenReturn(usrTransaction);
-		mockMvc.perform(post("/transaction/1").with(csrf()).with(user(theTestUser))
-				.flashAttr("transaction", newUsrTransaction)
-				)
-		//.andExpect(status().isOk())
-		.andExpect(status().is4xxClientError());
-		
-		verify(transactionService,times(0)).save(newUsrTransaction);
-	}
-	@Test
-	@WithMockUser(roles = "user", username = "pupa")
-	void testPostTransactionEditShouldBeFailUsrTransactionNotFound() throws Exception {
-		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
-		BankAccount theTestBankAccount = new BankAccount("test", BigDecimal.TEN, "test bank", theTestUser, Currency.getInstance("RUB"));
-		AdjustmentTransaction usrTransaction = new AdjustmentTransaction();
-		usrTransaction.setAppUser(theTestUser);
-		usrTransaction.setBankAccount(theTestBankAccount);
-		usrTransaction.setTypeOfOperation(TypeOfOperation.INCREASE);
-//		usrTransaction.setTypeOfTransaction(TypeOfTransaction.ADJUSTMENT);
-		usrTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
-		usrTransaction.setSumTransaction(BigDecimal.TEN);
-		
-		AdjustmentTransaction newUsrTransaction = (AdjustmentTransaction) usrTransaction.clone();
-		newUsrTransaction.setSumTransaction(BigDecimal.valueOf(40));
-		
+	
 		when(transactionService.getTransactioById(1L)).thenReturn(null);
-		mockMvc.perform(post("/transaction/1").with(csrf()).with(user(theTestUser))
-				.flashAttr("transaction", newUsrTransaction)
+		mockMvc.perform(post("/adjustment-ransaction/1").with(csrf())
+				.flashAttr("transaction", new AdjustmentTransaction())
 				)
-		//.andExpect(status().isOk())
-		.andExpect(status().is4xxClientError());
+				.andExpect(status().is4xxClientError());
 		
-		verify(transactionService,times(0)).save(newUsrTransaction);
+		verify(transactionService,times(0)).save(any());
 	}
 	
-	
+	/*
+	 *тестирую что при удалении меня переводит на страницу банковского счета владельца
+	 *и один раз был вызван метод удаления
+	 */
 	@Test
 	@WithMockUser(roles = "user", username = "pupa")
 	void testDeleteUsrTransactionShouldBeOk() throws Exception {
+		
 		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
 		BankAccount theTestBankAccount = new BankAccount("test", BigDecimal.TEN, "test bank", theTestUser, Currency.getInstance("RUB"));
 		AdjustmentTransaction usrTransaction = new AdjustmentTransaction();
 		usrTransaction.setAppUser(theTestUser);
 		usrTransaction.setBankAccount(theTestBankAccount);
 		usrTransaction.setTypeOfOperation(TypeOfOperation.INCREASE);
-//		usrTransaction.setTypeOfTransaction(TypeOfTransaction.ADJUSTMENT);
 		usrTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
 		usrTransaction.setSumTransaction(BigDecimal.TEN);
 		
 		when(transactionService.getTransactioById(1L)).thenReturn(usrTransaction);
 		
-		mockMvc.perform(get("/transaction/delete/1").with(user(theTestUser))).andExpect(redirectedUrl("/bank-account/"  + theTestBankAccount.getId()));
+		mockMvc.perform(get("/adjustment-transaction/delete/1").with(user(theTestUser)))
+			.andExpect(redirectedUrl("/bank-account/"  + theTestBankAccount.getId()));
+		
 		verify(transactionService,times(1)).delete(usrTransaction);
 	}
+	/*
+	 * тестирую что попытке удаление несуществующей или которой не является владельцем 
+	 * получает сообщение NOT FOUND
+	 */
 	@Test
 	@WithMockUser(roles = "user", username = "pupa")
 	void testDeleteUsrTransactionShouldBeFauilBadUser() throws Exception {
-		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
-		AppUser badTestUser = new AppUser("bad","pupa","123","123","pupa@mail.ru",true);
-		BankAccount theTestBankAccount = new BankAccount("test", BigDecimal.TEN, "test bank", theTestUser, Currency.getInstance("RUB"));
-		AdjustmentTransaction usrTransaction = new AdjustmentTransaction();
-		usrTransaction.setAppUser(badTestUser);
-		usrTransaction.setBankAccount(theTestBankAccount);
-		usrTransaction.setTypeOfOperation(TypeOfOperation.INCREASE);
-//		usrTransaction.setTypeOfTransaction(TypeOfTransaction.ADJUSTMENT);
-		usrTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
-		usrTransaction.setSumTransaction(BigDecimal.TEN);
-		
-		when(transactionService.getTransactioById(1L)).thenReturn(usrTransaction);
-		
-		mockMvc.perform(get("/transaction/delete/1").with(user(theTestUser))).andExpect(status().is4xxClientError());
-		verify(transactionService,times(0)).delete(usrTransaction);
-	}
-	@Test
-	@WithMockUser(roles = "user", username = "pupa")
-	void testDeleteUsrTransactionShouldBeFauilUsrTransactionNotFound() throws Exception {
-		AppUser badTestUser = new AppUser("bad","pupa","123","123","pupa@mail.ru",true);
-
 		
 		when(transactionService.getTransactioById(1L)).thenReturn(null);
 		
-		mockMvc.perform(get("/transaction/delete/1").with(user(badTestUser))).andExpect(status().is4xxClientError());
+		mockMvc.perform(get("/transaction/delete/1")).andExpect(status().isNotFound());
+		
 		verify(transactionService,times(0)).delete(any());
 	}
 
