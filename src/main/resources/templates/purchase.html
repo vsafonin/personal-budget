@@ -78,7 +78,7 @@
 							<td th:text="${transaction.bankAccount.name}">bank</td>
 							<td th:text="${transaction.shop.name}">shop</td>
 							<td th:text="${transaction.getProductNameString()}">products</td>
-							<td th:text="${transaction.sumTransaction}">Total sum</td>
+							<td th:text="${#numbers.formatDecimal(transaction.sumTransaction,1,'WHITESPACE',2,'COMMA')}">Total sum</td>
 							<td
 								th:text="${#dates.format(transaction.createTime, 'dd-MM-yyyy HH:MM')}">Create
 								date</td>

@@ -43,7 +43,7 @@ public class PurchaseTransactionServiceImpl implements PurchaseTransactionServic
 	@Override
 	public List<PurchaseTransaction> getAllPurchaseTransactions() {
 		AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
-		return purchaseTransactionRepository.getAllPurchaseTransactionByAppUser(theAppUser);
+		return purchaseTransactionRepository.findAllByAppUserOrderByCreateTimeDesc(theAppUser);
 	}
 
 	@Override

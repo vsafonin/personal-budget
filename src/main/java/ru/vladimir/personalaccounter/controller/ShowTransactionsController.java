@@ -34,6 +34,8 @@ import ru.vladimir.personalaccounter.service.TransferTransactionService;
 public class ShowTransactionsController {
 
 	private final int PAGE_LIMIT = 10;
+	
+	private final int PAGE_NUM_LIMIT = 5;
 
 	@Autowired
 	private PurchaseTransactionService purchaseTransactionService;
@@ -88,7 +90,7 @@ public class ShowTransactionsController {
 		} else {
 
 			resultListPurchaseTransaction = tempListPurchaseTransaction.stream()
-					.filter(p -> p.getBankAccount().getName().equals(bankNameFilter)).skip((currentPageNum - 1) * PAGE_LIMIT).limit(PAGE_LIMIT)
+					.skip((currentPageNum - 1) * PAGE_LIMIT).limit(PAGE_LIMIT)
 					.collect(Collectors.toList());
 		}
 		model.addAttribute("purchaseTransactions", resultListPurchaseTransaction);
@@ -98,7 +100,7 @@ public class ShowTransactionsController {
 		model.addAttribute("pagesLeft", getLeftPages(currentPageNum));
 		model.addAttribute("pagesRight", getRightPages(currentPageNum, sizeList));
 		model.addAttribute("pageNum", currentPageNum);
-		model.addAttribute("pageCount", sizeList / PAGE_LIMIT > 0 ? (sizeList + 1) / PAGE_LIMIT : 1);
+		model.addAttribute("pageCount", ((sizeList -1)/ PAGE_LIMIT) + 1);
 
 		return "purchase";
 	}
@@ -296,49 +298,60 @@ public class ShowTransactionsController {
 		return "salary";
 	}
 	/**
-	 * this method calculate how many pages will be to the left of the current one. Max pages is 5
-	 * @param currentPageNum - current page number
-	 * @return - result calculation, this is maybe number in range 1 to 4
+	 * This method returns array that contains numbers which denotes links on the left side of currentPageNum
+	 * First we calculate how many page we are need. For do this we with "for" loop, calculate array size.
+	 * This is may be number from 0 to currentPageNum - 5.
+	 * Next we add numbers denoting links to page. We want get sutructure like this:
+	 * 		currentPageNum = 4
+	 *  	result = [3,2,1]
+	 *  or
+	 *  	currentPageNum = 9
+	 *  	result = [8,7,6,5,4]
+	 * @param currentPageNum
+	 * @return
 	 */
 	private int[] getLeftPages(int currentPageNum) {
-		// thymeleaf support only th:each loop
-		//TODO переделать это, это не понятно
-		int[] pagesLeft = new int[6];
-		if (currentPageNum == 1) {
-			pagesLeft[0] = currentPageNum;
-		} else {
-			int count = currentPageNum;
-			int i = 5;
-			for (int j = count; j != (count - 5); j--, i--) {
-				if (j > 0) {
-					pagesLeft[i] = j;
-				}
-			}
-		}
-		return pagesLeft;
+	    int j = 0;
+        for (int i = 1; i < currentPageNum && j <= PAGE_NUM_LIMIT; i++, j++)
+            ;
+        int[] result = new int[j];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = currentPageNum - (i + 1);
+        }
+        return result;
 	}
+	
 	/**
-	 * this is same method as getLeftPages, but calculate how many pages will be to the right of the current one. 
-	 * Max pages is 5. 
-	 * @param currentPageNum - current page number.
-	 * @param sizeList - a number that indicates how many elements contains in list now
-	 * @return result calculation, this is maybe number in range 1 to 4
+	 * This method returns arrays with number link. 
+	 * first we calculate how many pages there can be. 
+	 *	for do this we use this expression :
+	 *	int maxCountPage = ((sizeList - 1) /PAGE_LIMIT) - (currentPageNum - 1);
+	 * describe:
+	 * 	first we calculate how many pages can there be at all.
+	 *  we are subtracting 1 from sizeList cause we want get from 10/10 = 0
+	 *  we are subtracting 1 from currentPageNum cause it contains from 1 to PAGE_LIMIT positions
+	 *   
+	 * next we calculate how size array we need. (from 0 to PAGE_NUM_LIMIT), do this with for loop //now is 5
+	 * next we are add number of links to new array (we want to get currentPage + i, cause we want get structure like this:
+	 * 	currentPageNum = 5
+	 * 	result [6,7,8,9,10]
+	 *  
+	 * @param currentPageNum -current number of page in HTML
+	 * @param sizeList - count of elements in List
+	 * @return
 	 */
 	private int[] getRightPages(int currentPageNum, int sizeList) {
-		int[] pagesRight = new int[4];
-		int count = currentPageNum + 1;
-		int pagesLeft = ((sizeList / PAGE_LIMIT) + (sizeList % PAGE_LIMIT)) - currentPageNum;
+		 int maxCountPage = ((sizeList - 1) /PAGE_LIMIT) - (currentPageNum - 1);
+	        int j = 0;
+	        
+	        for (int i = 1; i < maxCountPage + 1 && j <= PAGE_NUM_LIMIT; i++, j++);
 
-		if (sizeList > currentPageNum * PAGE_LIMIT) {
-			for (int j = 0; j < pagesRight.length - 1; j++) {
-				if (pagesLeft > j) {
-					pagesRight[j] = count;
-					count++;
-				}
-			}
-		}
-
-		return pagesRight;
+	        int[] result = new int[j+1];
+	        result[0] = currentPageNum;
+	        for (int i = 1; i < result.length; i++) {
+	            result[i] = currentPageNum + i;
+	        }
+	        return result;
 
 	}
 

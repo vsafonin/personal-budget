@@ -44,12 +44,12 @@ public class SalaryTransactionServiceImpl implements SalaryTransactionService {
 
 	@Override
 	public List<SalaryTransaction> getAllSalaryTransactions() {
-		return salaryTransactionRepository.getAllSalaryTransaction(getCurrentUser());
+		return salaryTransactionRepository.findAllByAppUserOrderByCreateTimeDesc(getCurrentUser());
 	}
 
 	@Override
 	public Optional<SalaryTransaction> getSalaryTransactionById(Long id) {
-		return salaryTransactionRepository.getSalaryTransactionByAppUserAndId(getCurrentUser(), id);
+		return salaryTransactionRepository.findByAppUserAndId(getCurrentUser(), id);
 	}
 
 	@Override
@@ -81,7 +81,7 @@ public class SalaryTransactionServiceImpl implements SalaryTransactionService {
 	public SalaryTransaction findById(long id) throws NoSuchElementException{
 		AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
 		Optional<SalaryTransaction> theSalaryTransactionOptional = 
-				salaryTransactionRepository.getSalaryTransactionByAppUserAndId(theAppUser,id);
+				salaryTransactionRepository.findByAppUserAndId(theAppUser,id);
 		return theSalaryTransactionOptional.get();
 	}
 

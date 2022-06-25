@@ -44,7 +44,7 @@ public class DebtTransactionServiceImpl implements DebtTransactionService {
 				cacheDebtTransaction.get(id).getAppUser().equals(theAppUser)) {
 			theDebtTransaction = cacheDebtTransaction.get(id);
 		} else {
-			Optional<DebtTransaction> thedebtTransactionOptional = debtTransactionRepository.findByIdAndAppUser(theAppUser,id);
+			Optional<DebtTransaction> thedebtTransactionOptional = debtTransactionRepository.findByAppUserAndId(theAppUser,id);
 			if (!thedebtTransactionOptional.isPresent()) {
 				throw new DebtTransactionNotFoundExp();
 			}
@@ -123,7 +123,7 @@ public class DebtTransactionServiceImpl implements DebtTransactionService {
 	@Override
 	public List<DebtTransaction> findAll() {
 		AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
-		return debtTransactionRepository.findAll(theAppUser);
+		return debtTransactionRepository.findAllByAppUserOrderByCreateTimeDesc(theAppUser);
 	}
 
 }
