@@ -33,15 +33,16 @@ class AdjustmentTransactionServiceImplTest {
 	@InjectMocks
 	private AdjustmentTransactionServiceImpl transactionService;
 	
+	/*
+	 * тестирую что при сохранении Adjustment Transaction меняется баланс BankAccount
+	 */
 	@Test
 	void testSaveShouldBeChangeBankBalance() {
 		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
 		BankAccount theTestBankAccount = new BankAccount("test", BigDecimal.TEN, "test bank", theTestUser, Currency.getInstance("RUB"));
 		AdjustmentTransaction usrTransaction = new AdjustmentTransaction();
-//		usrTransaction.setAppUser(theTestUser);
 		usrTransaction.setBankAccount(theTestBankAccount);
 		usrTransaction.setTypeOfOperation(TypeOfOperation.DECREASE);
-//		usrTransaction.setTypeOfTransaction(TypeOfTransaction.ADJUSTMENT);
 		usrTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
 		usrTransaction.setSumTransaction(BigDecimal.TEN);
 		transactionService.save(usrTransaction);
@@ -49,29 +50,31 @@ class AdjustmentTransactionServiceImplTest {
 		assertThat(theTestBankAccount.getBalance().compareTo(BigDecimal.ZERO)).isEqualTo(0);
 		
 	}
-
+	
+	/*
+	 * тестирую что при удалени, меняется баланс BankAccount
+	 */
 	@Test
 	void testDelete() {
 		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
 		BankAccount theTestBankAccount = new BankAccount("test", BigDecimal.TEN, "test bank", theTestUser, Currency.getInstance("RUB"));
 		AdjustmentTransaction usrTransaction = new AdjustmentTransaction();
-//		usrTransaction.setAppUser(theTestUser);
 		usrTransaction.setBankAccount(theTestBankAccount);
 		usrTransaction.setTypeOfOperation(TypeOfOperation.INCREASE);
-//		usrTransaction.setTypeOfTransaction(TypeOfTransaction.ADJUSTMENT);
 		usrTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
 		usrTransaction.setSumTransaction(BigDecimal.TEN);
 		transactionService.save(usrTransaction);
 		
 		assertThat(theTestBankAccount.getBalance().compareTo(BigDecimal.valueOf(20))).isEqualTo(0);
 	}
+	/*
+	 * тестирую 
+	 */
 	@Test
 	void testSaveBankAccountIsNullShouldBeFail() {
 		AdjustmentTransaction usrTransaction = new AdjustmentTransaction();
-//		usrTransaction.setAppUser(null);
 		usrTransaction.setBankAccount(null);
 		usrTransaction.setTypeOfOperation(TypeOfOperation.INCREASE);
-//		usrTransaction.setTypeOfTransaction(TypeOfTransaction.ADJUSTMENT);
 		usrTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
 		usrTransaction.setSumTransaction(BigDecimal.TEN);
 		IllegalArgumentException exp = assertThrows(IllegalArgumentException.class, () -> {
@@ -81,13 +84,14 @@ class AdjustmentTransactionServiceImplTest {
 		assertThat(exp.getMessage()).isEqualTo("UsrTransaction trying save, but it has bank account is null");
 		
 	}
+	/*
+	 * тестирую что BankAccount - но я не вижу ни одной ситуации когда это может быть.
+	 */
 	@Test
 	void testDeleteBankAccountIsNullShouldBeFail() {
 		AdjustmentTransaction usrTransaction = new AdjustmentTransaction();
-//		usrTransaction.setAppUser(null);
 		usrTransaction.setBankAccount(null);
 		usrTransaction.setTypeOfOperation(TypeOfOperation.INCREASE);
-//		usrTransaction.setTypeOfTransaction(TypeOfTransaction.ADJUSTMENT);
 		usrTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
 		usrTransaction.setSumTransaction(BigDecimal.TEN);
 		IllegalArgumentException exp = assertThrows(IllegalArgumentException.class, () -> {
@@ -98,19 +102,5 @@ class AdjustmentTransactionServiceImplTest {
 		
 	}
 	
-	@Test
-	void testDeleteCheckNull() {
-		@SuppressWarnings("unused")
-		NullPointerException exp = assertThrows(NullPointerException.class, () -> {
-			transactionService.delete(null);
-		});
-	}
-	@Test
-	void testSafeCheckNull() {
-		@SuppressWarnings("unused")
-		NullPointerException exp = assertThrows(NullPointerException.class, () -> {
-			transactionService.save(null);
-		});
-	}
 
 }

@@ -1,13 +1,13 @@
 package ru.vladimir.personalaccounter.service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.TypedQuery;
+import javax.persistence.Query;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,12 +17,8 @@ import ru.vladimir.personalaccounter.client.CurrencyParseExcp;
 import ru.vladimir.personalaccounter.entity.AbstractTransaction;
 import ru.vladimir.personalaccounter.entity.AppUser;
 import ru.vladimir.personalaccounter.entity.BankAccount;
-import ru.vladimir.personalaccounter.entity.DebtTransaction;
-import ru.vladimir.personalaccounter.entity.PurchaseTransaction;
-import ru.vladimir.personalaccounter.entity.SalaryTransaction;
 import ru.vladimir.personalaccounter.entity.TransferTransaction;
 import ru.vladimir.personalaccounter.enums.TypeOfOperation;
-import ru.vladimir.personalaccounter.exception.BankAccountNotFoundException;
 import ru.vladimir.personalaccounter.repository.BankAccountRepository;
 
 @Service
@@ -47,13 +43,10 @@ public class BankAccountServiceImpl implements BankAccountService {
 	}
 
 	@Override
-	public BankAccount getBankAccountById(Long id) {
+	public BankAccount getBankAccountById(Long id) throws NoSuchElementException{
 		AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
 		Optional<BankAccount> bankAccount = accountRepository.findById(theAppUser, id);
-		if (bankAccount.isPresent()) {
-			return bankAccount.get();
-		}
-		throw new BankAccountNotFoundException("trying get bank account, but this isn't exist");
+		return bankAccount.get();
 	}
 
 	@Override
@@ -61,19 +54,19 @@ public class BankAccountServiceImpl implements BankAccountService {
 		AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
 		List<BankAccount> bankAccounts = accountRepository.getBankAccounts(theAppUser);
 		//if we have only one bank account set it default
-		if (bankAccounts.size() == 1 ) {
+		if (bankAccounts == null) {
 				if (!bankAccount.isDefaultAccount()) {
 					bankAccount.setDefaultAccount(true);
 				}
 				}
 		else if (bankAccount.isDefaultAccount()) {
-			bankAccounts
-			.stream()
-				.filter(ba -> !ba.equals(bankAccount))
-				.filter(ba -> ba.isDefaultAccount() == true).forEach(ba -> {
-					ba.setDefaultAccount(false);
-					accountRepository.save(ba);
-				});
+			for (int i = 0 ; i < bankAccounts.size(); i++) {
+				if (bankAccounts.get(i).isDefaultAccount()) {
+					BankAccount tmpBankAccount = bankAccounts.get(i);
+					tmpBankAccount.setDefaultAccount(false);
+					accountRepository.save(tmpBankAccount);
+				}
+			}
 		}
 		
 		return accountRepository.save(bankAccount);
@@ -94,28 +87,22 @@ public class BankAccountServiceImpl implements BankAccountService {
 
 	@Override
 	public boolean bankAccountHasTransaction(BankAccount bankAccount) {
-		String sqlSalary = "Select s from SalaryTransaction as s where s.bankAccount = :BankAccount";
-		String sqlPurchase = "Select p from PurchaseTransaction as p where p.bankAccount = :BankAccount";
-		String sqlDebt = "Select d from DebtTransaction as d where d.bankAccount = :BankAccount";
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		TypedQuery<SalaryTransaction> querySalary = entityManager.createQuery(sqlSalary, SalaryTransaction.class);
-		List<SalaryTransaction> salarys = querySalary.setParameter("BankAccount", bankAccount).setMaxResults(1)
-				.getResultList();
-
-		TypedQuery<PurchaseTransaction> queryPurchase = entityManager.createQuery(sqlPurchase,
-				PurchaseTransaction.class);
-		List<PurchaseTransaction> purchases = queryPurchase.setParameter("BankAccount", bankAccount).setMaxResults(1)
-				.getResultList();
-
-		TypedQuery<DebtTransaction> queryDebt = entityManager.createQuery(sqlDebt, DebtTransaction.class);
-		List<DebtTransaction> debts = queryDebt.setParameter("BankAccount", bankAccount).setMaxResults(1)
-				.getResultList();
-
-		List<List<? extends AbstractTransaction>> result = new ArrayList<List<? extends AbstractTransaction>>();
-		result.add(salarys);
-		result.add(purchases);
-		result.add(debts);
-		return result != null;
+		boolean result = false;
+		String sqlCountRows =  "select sum(tb.transactions) "
+				+ "from ( select count(*) as transactions from salary_transaction where bank_account_id = :bankAccountId "
+				+ "union all select count(*) as transactions from debt_transaction where bank_account_id = :bankAccountId "
+				+ "union all select count(*) as transactions from purchase_transaction where bank_account_id = :bankAccountId "
+				+ "union all select count(*) as transactions from transfer_transaction where "
+				+ "from_bank_account_id = :bankAccountId or to_bank_account_id = :bankAccountId "
+				+ ")tb";
+		EntityManager em = entityManagerFactory.createEntityManager();
+		Query query = em.createNativeQuery(sqlCountRows);
+		query.setParameter("bankAccountId", bankAccount.getId());
+		BigDecimal count = (BigDecimal) query.getSingleResult();
+		if (count != null && count.compareTo(BigDecimal.ZERO) != 0) {
+			result = true;
+		}
+		return result;
 	}
 
 	@Override
@@ -124,16 +111,21 @@ public class BankAccountServiceImpl implements BankAccountService {
 			String sqlDeleteTransactionsSalary = "Delete from SalaryTransaction t where t.bankAccount = :bankAccount";
 			String sqlDeleteTransactionsDebt = "Delete from DebtTransaction d where d.bankAccount = :bankAccount";
 			String sqlDeleteTransactionsPurchase = "Delete from PurchaseTransaction p where p.bankAccount = :bankAccount";
+			String sqlDeleteTransactionsеTransfer = "Delete from TransferTransaction p where p.fromBankAccount = :bankAccount "
+					+ "or p.toBankAccount = :bankAccount";
 			EntityManager entityManager = entityManagerFactory.createEntityManager();
+			
 			entityManager.getTransaction().begin();
-			entityManager.createQuery(sqlDeleteTransactionsSalary).setParameter("bankAccount", bankAccount)
-					.executeUpdate();
-			entityManager.createQuery(sqlDeleteTransactionsDebt).setParameter("bankAccount", bankAccount)
-					.executeUpdate();
-			entityManager.createQuery(sqlDeleteTransactionsPurchase).setParameter("bankAccount", bankAccount)
-					.executeUpdate();
+				entityManager.createQuery(sqlDeleteTransactionsSalary).setParameter("bankAccount", bankAccount)
+						.executeUpdate();
+				entityManager.createQuery(sqlDeleteTransactionsDebt).setParameter("bankAccount", bankAccount)
+						.executeUpdate();
+				entityManager.createQuery(sqlDeleteTransactionsPurchase).setParameter("bankAccount", bankAccount)
+						.executeUpdate();
+				entityManager.createQuery(sqlDeleteTransactionsеTransfer).setParameter("bankAccount", bankAccount)
+				.executeUpdate();
 			entityManager.getTransaction().commit();
-			;
+
 			delete(bankAccount);
 		} else {
 			delete(bankAccount);

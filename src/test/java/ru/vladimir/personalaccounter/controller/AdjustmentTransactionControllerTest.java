@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Currency;
+import java.util.NoSuchElementException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,7 +83,7 @@ class AdjustmentTransactionControllerTest {
 	@WithMockUser(roles = "user", username = "pupa")
 	void testGetTransactionShouldBeFailBadUser() throws Exception {
 		
-		when(transactionService.getTransactioById(1L)).thenReturn(null);
+		when(transactionService.getTransactioById(1L)).thenThrow(NoSuchElementException.class);
 		
 		mockMvc.perform(get("/adjustment-transaction/1"))
 			.andExpect(status().isNotFound());

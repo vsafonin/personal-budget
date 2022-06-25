@@ -5,15 +5,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Currency;
+import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +49,7 @@ import ru.vladimir.personalaccounter.service.UserService;
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = PurchaseTransactionController.class)
 @Import(MockConfiguration.class)
+@WithMockUser
 public class PurchaseTransactionControllerTest {
 
     @Autowired
@@ -71,24 +74,40 @@ public class PurchaseTransactionControllerTest {
 	@MockBean
 	private UserService userService;
 	
-	@BeforeEach
-	private void setUp() {
-		AppUser theUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
-		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
-
+	/*
+	 * тестирую что авторизованный пользователь может получить страницу создания PurchaseTransaction
+	 */
+	@Test
+	void testPurchaseTransactionGet_should_be_ok() throws Exception{
+		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(new AppUser());
+		mockMvc.perform(get("/purchase-transaction/0")).andExpect(view().name("transaction-purchase-edit"));
 	}
-    
-   
-    public PurchaseTransactionControllerTest() {
-    }
-
+	
+	/*
+	 * тестирую что авторизованный пользователь получить страницу редактирования PurchaseTransaction
+	 */
+	@Test
+	void testPurchaseTransactionGetExisting_shou_be_ok() throws Exception {
+		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(new AppUser());
+		when(purchaseTransactionService.findById(1L)).thenReturn(Optional.of(new PurchaseTransaction()));
+		mockMvc.perform(get("/purchase-transaction/1")).andExpect(view().name("transaction-purchase-edit"));
+	}
+	
+	/*
+	 * тестирую что авторизованный пользователь, с верно заполненой PurchaseTransaction может сохранить ее
+	 * ожидаю редиректа на / страницу
+	 * и вызов метода  purchaseTransactionServiceSave
+	 */
     @Test
-    @WithMockUser(username = "pupa", roles = "user")
-    public void testShouldBeOk() throws Exception {
+    public void testSavePurchaseTransaction_should_be_ok() throws Exception {
     	AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
+    	when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theTestUser);
+    	
     	BankAccount theTestBankAccount = new BankAccount("test", BigDecimal.valueOf(10), "test bank", theTestUser, Currency.getInstance("RUB"));
+    	
     	Shop theShop = new Shop();
     	theShop.setName("5ka");
+    	
     	Category theCategory = new Category();
     	theCategory.setName("test");
     	
@@ -116,10 +135,13 @@ public class PurchaseTransactionControllerTest {
     	
     }
     
+    /*
+     * тестирую что невозможно сохранить неверно заполненую PurchaseTransaction
+     */
     @Test
-    @WithMockUser(username = "pupa", roles = " user")
     public void testShouldBeFailValidation() throws Exception {
     	AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
+    	when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theTestUser);
     	BankAccount theTestBankAccount = new BankAccount("test", BigDecimal.valueOf(10), "test bank", theTestUser, Currency.getInstance("RUB"));
     	Shop theShop = new Shop();
     	Category theCategory = new Category();

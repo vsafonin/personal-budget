@@ -2,6 +2,7 @@ package ru.vladimir.personalaccounter.controller;
 
 import java.sql.Timestamp;
 import java.util.Locale;
+import java.util.NoSuchElementException;
 
 import javax.validation.Valid;
 
@@ -19,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import ru.vladimir.personalaccounter.client.CurrencyParseExcp;
 import ru.vladimir.personalaccounter.entity.AppUser;
 import ru.vladimir.personalaccounter.entity.TransferTransaction;
-import ru.vladimir.personalaccounter.service.TransferTransactionNotFoundExcp;
+import ru.vladimir.personalaccounter.exception.TransferTransactionNotFoundExcp;
 import ru.vladimir.personalaccounter.service.TransferTransactionService;
 import ru.vladimir.personalaccounter.service.UserService;
 /**
@@ -60,7 +61,12 @@ public class TransferTransactionController {
 		theTransaction.setCreateTime(new Timestamp(System.currentTimeMillis()));
 		}
 		else {
-			theTransaction = transferTransactionService.getTransferTransactionById(id);
+			try {
+				theTransaction = transferTransactionService.getTransferTransactionById(id);
+			}
+			catch (NoSuchElementException exp) {
+				throw new TransferTransactionNotFoundExcp();
+			}
 		}
 		model.addAttribute("transferTransaction",theTransaction);
 		return "transfer-betwen-bank";
@@ -87,7 +93,7 @@ public class TransferTransactionController {
 			return "transfer-betwen-bank";
 		}
 		try {
-		transferTransactionService.saveTransferTransaction(theTransferTransaction);
+			transferTransactionService.saveTransferTransaction(theTransferTransaction);
 		}
 		catch (CurrencyParseExcp exp) {
 			log.error(exp.getMessage());
@@ -103,12 +109,18 @@ public class TransferTransactionController {
 	/**
 	 * Handles request to "/transfer/delete/{id}" and serves for delete TransferTransaction entity from WEB UI
 	 * @param id - Transfer Transaction id which we want to delete. 
-	 * @return - redirect to list of Transfer Transactions page.
+	 * @return - redirect to list of Transfer Transactions page, or trhows TransferTransactionNotFoundExcp
 	 */
 	@GetMapping("/transfer/delete/{id}")
 	public String deleteTransfer(@PathVariable("id") long id) {
+		try {
 		TransferTransaction theTransferTransaction = transferTransactionService.getTransferTransactionById(id);
 		transferTransactionService.deleteTransferTransaction(theTransferTransaction);
 		return "redirect:/transfer";
+		}
+		catch (NoSuchElementException exp) {
+			throw new TransferTransactionNotFoundExcp();
+		}
+		
 	}
 }

@@ -1,6 +1,7 @@
 package ru.vladimir.personalaccounter.controller;
 
 import java.util.Currency;
+import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import ru.vladimir.personalaccounter.entity.AdjustmentTransaction;
-import ru.vladimir.personalaccounter.exception.UsrTransactionNotFoundExp;
+import ru.vladimir.personalaccounter.exception.AdjustmentTransactionNotFoundExp;
 import ru.vladimir.personalaccounter.service.AdjustmentTransactionService;
 /**
  * The Controller for work with Adjustment Transaction Entity over web UI.
@@ -30,17 +31,16 @@ public class AdjustmentTransactionController {
 	@GetMapping("/adjustment-transaction/{id}")
 	public String getTransaction(@PathVariable("id") Long id, Model model) {
 		//get transaction by id
-
-		AdjustmentTransaction adjustmentTransaction = transactionService.getTransactioById(id);
-		if (adjustmentTransaction == null) {
-			throw new UsrTransactionNotFoundExp();
+		try {
+			AdjustmentTransaction adjustmentTransaction = transactionService.getTransactioById(id);
+			model.addAttribute("transaction", adjustmentTransaction);
+			//add currency SET
+			model.addAttribute("currencySet", Currency.getAvailableCurrencies());
+			return "transaction-adjustment-edit-page";
 		}
-		
-		model.addAttribute("transaction", adjustmentTransaction);
-		//add currency SET
-		model.addAttribute("currencySet", Currency.getAvailableCurrencies());
-		
-		return "transaction-adjustment-edit-page";
+		catch (NoSuchElementException exp) {
+			throw new AdjustmentTransactionNotFoundExp();
+		}
 	}
 	/**
 	 * Handles post requests to "/adjustment-transaction/{id}" and transfers object to service layer for save changes.
@@ -57,11 +57,11 @@ public class AdjustmentTransactionController {
 			@ModelAttribute("transaction") AdjustmentTransaction  adjustmentTransacion,
 			Model model) {
 		if (adjustmentTransacion == null) {
-			throw new UsrTransactionNotFoundExp();
+			throw new AdjustmentTransactionNotFoundExp();
 		}
 		AdjustmentTransaction oldTransaction = transactionService.getTransactioById(id);
 		if (oldTransaction == null) {
-			throw new UsrTransactionNotFoundExp("old transaction doesn't exist");
+			throw new AdjustmentTransactionNotFoundExp("old transaction doesn't exist");
 		}
 
 		if (oldTransaction.getTypeOfOperation() != adjustmentTransacion.getTypeOfOperation() || 
@@ -86,7 +86,7 @@ public class AdjustmentTransactionController {
 		//get transaction
 		AdjustmentTransaction adjustmentTransaction = transactionService.getTransactioById(id);
 		if (adjustmentTransaction == null) {
-			throw new UsrTransactionNotFoundExp();
+			throw new AdjustmentTransactionNotFoundExp();
 		}
 		//delete it
 		transactionService.delete(adjustmentTransaction);

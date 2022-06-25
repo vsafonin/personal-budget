@@ -39,16 +39,16 @@ public class DebtTransactionServiceImpl implements DebtTransactionService {
 	@Override
 	public DebtTransaction findById(long id) {
 		DebtTransaction theDebtTransaction = null;
-		if (cacheDebtTransaction.containsKey(id)) {
+		AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
+		if (cacheDebtTransaction.containsKey(id) &&
+				cacheDebtTransaction.get(id).getAppUser().equals(theAppUser)) {
 			theDebtTransaction = cacheDebtTransaction.get(id);
-			checkRight(theDebtTransaction);
 		} else {
-			Optional<DebtTransaction> thedebtTransactionOptional = debtTransactionRepository.findById(id);
+			Optional<DebtTransaction> thedebtTransactionOptional = debtTransactionRepository.findByIdAndAppUser(theAppUser,id);
 			if (!thedebtTransactionOptional.isPresent()) {
 				throw new DebtTransactionNotFoundExp();
 			}
 			theDebtTransaction = thedebtTransactionOptional.get();
-			checkRight(theDebtTransaction);
 			cacheDebtTransaction.put(theDebtTransaction.getId(), theDebtTransaction);
 		}
 
@@ -68,6 +68,9 @@ public class DebtTransactionServiceImpl implements DebtTransactionService {
 			// edit
 			// refresh cache - otherwise findById return changed object
 			DebtTransaction oldDebtTransaction = findById(debtTransaction.getId());
+			if (oldDebtTransaction == null) {
+				throw new DebtTransactionNotFoundExp();
+			}
 			
 			if (debtTransaction.getSumTransaction().compareTo(BigDecimal.ZERO) < 0) {
 				debtTransaction.setActive(false);

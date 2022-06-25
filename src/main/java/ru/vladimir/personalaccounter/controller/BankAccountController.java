@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Currency;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.validation.Valid;
@@ -22,6 +23,7 @@ import ru.vladimir.personalaccounter.entity.AdjustmentTransaction;
 import ru.vladimir.personalaccounter.entity.AppUser;
 import ru.vladimir.personalaccounter.entity.BankAccount;
 import ru.vladimir.personalaccounter.enums.TypeOfOperation;
+import ru.vladimir.personalaccounter.exception.BankAccountNotFoundException;
 import ru.vladimir.personalaccounter.exception.BankAccountNotFoundExp;
 import ru.vladimir.personalaccounter.service.AdjustmentTransactionService;
 import ru.vladimir.personalaccounter.service.BankAccountService;
@@ -59,7 +61,7 @@ public class BankAccountController {
 	 * handle /bank-account/{id} requests, return page for edit BankAccount entity
 	 * @param id - id of BankAccount entity, if id = 0 user want create new BankAccount
 	 * @param model - Model for thymeleaf
-	 * @return  - Bank Account edit html page.
+	 * @return  - Bank Account edit html page. or throws BankAccountNotFoundException
 	 */
 	@GetMapping("/bank-account/{id}")
 	public String getBankAccountCreatePage(@PathVariable("id") long id, Model model) {
@@ -70,10 +72,15 @@ public class BankAccountController {
 			model.addAttribute("bankAccount", theNewBankAccount);
 			return "bankaccount-edit-page";
 		}
-		BankAccount theBankAccount = bankAccountService.getBankAccountById(id);
-		model.addAttribute("bankAccount", theBankAccount);
-		model.addAttribute("transactions", adjustmentTransactionService.getTransactions(theBankAccount));
-		return "bankaccount-edit-page";
+		try {
+			BankAccount theBankAccount = bankAccountService.getBankAccountById(id);
+			model.addAttribute("bankAccount", theBankAccount);
+			model.addAttribute("transactions", adjustmentTransactionService.getTransactions(theBankAccount));
+			return "bankaccount-edit-page";
+		}
+		catch (NoSuchElementException exp) {
+			throw new BankAccountNotFoundException();
+		}
 	}
 
 	/**
@@ -83,7 +90,7 @@ public class BankAccountController {
 	 * @param bindingResult - validation errors for BankAccount fields
 	 * @param model - Model for thymeleaf
 	 * @return - if user create new BankAccount (id == 0 ) - redirect user to /, otherwise redirect back to edit 
-	 * page with success save message.
+	 * page with success save message. If old bankAccount not found throws Exception
 	 */
 	@PostMapping("/bank-account/{id}")
 	public String saveNewBankAccount(@PathVariable("id") long id,
@@ -102,8 +109,15 @@ public class BankAccountController {
 			return "bankaccount-edit-page";
 		}
 		
+		
 		if (id != 0) { //this is old transaction, user trying save changes
-			BankAccount oldBankAccountForCompare = bankAccountService.getBankAccountById(id);
+			BankAccount oldBankAccountForCompare;
+			try {
+				oldBankAccountForCompare = bankAccountService.getBankAccountById(id);
+			}
+			catch (NoSuchElementException e) {
+				throw new BankAccountNotFoundException();
+			}
 			if (oldBankAccountForCompare.getBalance().compareTo(bankAccount.getBalance()) != 0) {
 				// to do create new adjustment transaction
 				AdjustmentTransaction adjustment = new AdjustmentTransaction();

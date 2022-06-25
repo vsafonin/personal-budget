@@ -2,6 +2,8 @@ package ru.vladimir.personalaccounter.controller;
 
 import java.sql.Timestamp;
 import java.util.Currency;
+import java.util.NoSuchElementException;
+
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import ru.vladimir.personalaccounter.entity.AppUser;
 import ru.vladimir.personalaccounter.entity.Partner;
 import ru.vladimir.personalaccounter.entity.SalaryTransaction;
+import ru.vladimir.personalaccounter.exception.SalaryTransactionNotFoundExcp;
 import ru.vladimir.personalaccounter.repository.PartnerRepository;
 import ru.vladimir.personalaccounter.service.SalaryTransactionService;
 import ru.vladimir.personalaccounter.service.UserService;
@@ -48,13 +51,18 @@ public class SalaryTransactionController {
 	@GetMapping("/salary-transaction/{id}")
 	public String getSalaryTransactionPage(@PathVariable("id") long id,Model model) {
 		SalaryTransaction theSalaryTransaction;
-		AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
 		if (id == 0) {
+			AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
 			theSalaryTransaction = new SalaryTransaction();
 			theSalaryTransaction.setAppUser(theAppUser);
 		}
 		else {
-			theSalaryTransaction = salaryTransactionService.findById(id);
+			try {
+				theSalaryTransaction = salaryTransactionService.findById(id);
+			}
+			catch (NoSuchElementException exp) {
+				throw new SalaryTransactionNotFoundExcp();
+			}
 		}
 		model.addAttribute("salaryTransaction",theSalaryTransaction);
 		return "transaction-salary";
@@ -66,9 +74,15 @@ public class SalaryTransactionController {
 	 */
 	@GetMapping("/salary-transaction/delete/{id}")
 	public String deleteSalaryTransactionPage(@PathVariable("id") long id) {
-		SalaryTransaction theSalaryTransaction = salaryTransactionService.findById(id);
-		salaryTransactionService.delete(theSalaryTransaction);
-		return "redirect:/salary";
+		try {
+			SalaryTransaction theSalaryTransaction = salaryTransactionService.findById(id);
+			salaryTransactionService.delete(theSalaryTransaction);
+			return "redirect:/salary";
+		}
+		catch (NoSuchElementException e) {
+			throw new SalaryTransactionNotFoundExcp();
+		}
+		
 	}
 	/**
 	 * Used to save new or changed SalaryTransaction entity to Database via WEB UI

@@ -9,12 +9,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import ru.vladimir.personalaccounter.exception.BankAccountNotFoundExp;
 import ru.vladimir.personalaccounter.exception.DebtPaymentNotFoundExp;
+import ru.vladimir.personalaccounter.exception.DebtTransactionNotFoundExp;
 import ru.vladimir.personalaccounter.exception.DefaultBankAccountNotFoundExcp;
 import ru.vladimir.personalaccounter.exception.PurchaseTransactionExistsExp;
 import ru.vladimir.personalaccounter.exception.PurchaseTransactionNotFound;
 import ru.vladimir.personalaccounter.exception.SalaryTransactionNotFoundExcp;
+import ru.vladimir.personalaccounter.exception.TransferTransactionNotFoundExcp;
 import ru.vladimir.personalaccounter.exception.UserGetDataSecurityExp;
-import ru.vladimir.personalaccounter.exception.UsrTransactionNotFoundExp;
+import ru.vladimir.personalaccounter.exception.AdjustmentTransactionNotFoundExp;
 
 @ControllerAdvice
 public class ExceptionHandlerControllerAdvice {
@@ -25,9 +27,9 @@ public class ExceptionHandlerControllerAdvice {
 	public void handleUserGetDataSecurityException(UserGetDataSecurityExp exp) {
 	}
 	
-	@ExceptionHandler(UsrTransactionNotFoundExp.class)
+	@ExceptionHandler(AdjustmentTransactionNotFoundExp.class)
 	@ResponseStatus(code = HttpStatus.NOT_FOUND)
-	public void handleUsrTransactionNotFoundExp(UsrTransactionNotFoundExp exp) {
+	public void handleUsrTransactionNotFoundExp(AdjustmentTransactionNotFoundExp exp) {
 	}
 
 	@ExceptionHandler(BankAccountNotFoundExp.class)
@@ -48,6 +50,16 @@ public class ExceptionHandlerControllerAdvice {
 	@ExceptionHandler(DebtPaymentNotFoundExp.class)
 	@ResponseStatus(code = HttpStatus.NOT_FOUND)
 	public void handledebtPaymentNotFoundExp(DebtPaymentNotFoundExp exp) {
+	}
+	
+	@ExceptionHandler(TransferTransactionNotFoundExcp.class)
+	@ResponseStatus(code = HttpStatus.NOT_FOUND)
+	public void handleTransferTransactionNotFoundExcp(TransferTransactionNotFoundExcp exp) {
+	}
+	
+	@ExceptionHandler(DebtTransactionNotFoundExp.class)
+	@ResponseStatus(code = HttpStatus.NOT_FOUND)
+	public void handleDebtTransactionNotFoundExcp(DebtTransactionNotFoundExp exp) {
 	}
 	
 	@ExceptionHandler(IllegalArgumentException.class)

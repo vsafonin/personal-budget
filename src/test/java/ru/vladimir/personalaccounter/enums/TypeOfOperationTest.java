@@ -12,7 +12,10 @@ class TypeOfOperationTest {
 	
 	@MockBean
 	private MessageSource messageSource;
-
+	
+	/*
+	 * тестирую что работает метод getName у Enum и работает перевод на другой язык
+	 */
 	@Test
 	void testGetName() {
 		Locale.setDefault(new Locale("en", "EN"));

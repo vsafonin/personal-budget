@@ -7,12 +7,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.List;
 import java.util.Locale;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,11 +23,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import ru.vladimir.personalaccounter.entity.AppUser;
 import ru.vladimir.personalaccounter.exception.BadAppUserFormatException;
-import ru.vladimir.personalaccounter.repository.UserRepository;
 import ru.vladimir.personalaccounter.service.UserService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Disabled //он не нужен при каждом запуске, запускать только если меняется логика регистрации.
 public class RegistrationControllerIntegrationTest {
 
     @Autowired
@@ -37,16 +36,9 @@ public class RegistrationControllerIntegrationTest {
     @Autowired
     private UserService userService;
     
-    @Autowired
-    private UserRepository repository;
-    
     public RegistrationControllerIntegrationTest() {
     }
-    @AfterEach
-    public void removeUserFromDb() {
-    	List<AppUser> users = repository.findAll();
-    	users.stream().forEach(u -> userService.deleteUser(u));
-    }
+
     
     private AppUser theAppUser;
     
@@ -61,11 +53,9 @@ public class RegistrationControllerIntegrationTest {
     	
     }
     
-    @AfterEach
-    private void deleteUser() {
-    	userService.deleteUser(theAppUser);
-    }
-    
+    /*
+     * тестирую что если пользователь ввел верные параметры - регистрация проходит успешно
+     */
     @Test
     public void test_valid_user_should_be_ok() throws Exception {
 
@@ -92,6 +82,7 @@ public class RegistrationControllerIntegrationTest {
             Assertions.fail();
         }
         
+        userService.deleteUser(userFromDb);
     }
     
     /**
@@ -121,7 +112,7 @@ public class RegistrationControllerIntegrationTest {
     	mockMvc.perform(formLogin("/login").user(theAppUser.getUsername()).password(theAppUser.getPassword()))
     		.andExpect(status().is3xxRedirection()); //should redirect to /
     	
-    	
+    	userService.deleteUser(userInDb);
     }
     
 

@@ -1,6 +1,7 @@
 package ru.vladimir.personalaccounter.service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Service;
 import ru.vladimir.personalaccounter.entity.AppUser;
 import ru.vladimir.personalaccounter.entity.BankAccount;
 import ru.vladimir.personalaccounter.entity.SalaryTransaction;
-import ru.vladimir.personalaccounter.exception.SalaryTransactionNotFoundExcp;
 import ru.vladimir.personalaccounter.exception.UserGetDataSecurityExp;
 import ru.vladimir.personalaccounter.repository.SalaryTransactionRepository;
 
@@ -49,7 +49,7 @@ public class SalaryTransactionServiceImpl implements SalaryTransactionService {
 
 	@Override
 	public Optional<SalaryTransaction> getSalaryTransactionById(Long id) {
-		return salaryTransactionRepository.getSalaryTransactionById(getCurrentUser(), id);
+		return salaryTransactionRepository.getSalaryTransactionByAppUserAndId(getCurrentUser(), id);
 	}
 
 	@Override
@@ -73,19 +73,16 @@ public class SalaryTransactionServiceImpl implements SalaryTransactionService {
 		AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
 		return theAppUser;
 	}
-
+	/**
+	 * @param - id which SalaryTransaction we want to find
+	 * @return - if found SalaryTransaction, otherwise throws NoSuchElementException
+	 */
 	@Override
-	public SalaryTransaction findById(long id) {
-		SalaryTransaction theSalaryTransaction = salaryTransactionRepository.getById(id);
-		if (theSalaryTransaction == null) {
-			throw new SalaryTransactionNotFoundExcp();
-		}
-		if (theSalaryTransaction.getAppUser().equals(getCurrentUser())) {
-			return theSalaryTransaction;
-		}
-		else {
-			throw new UserGetDataSecurityExp("Someone trying delete Salary transaction, but he isn't owner");
-		}
+	public SalaryTransaction findById(long id) throws NoSuchElementException{
+		AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
+		Optional<SalaryTransaction> theSalaryTransactionOptional = 
+				salaryTransactionRepository.getSalaryTransactionByAppUserAndId(theAppUser,id);
+		return theSalaryTransactionOptional.get();
 	}
 
 }

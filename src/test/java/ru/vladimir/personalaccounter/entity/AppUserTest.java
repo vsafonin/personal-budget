@@ -8,7 +8,8 @@ import org.junit.jupiter.api.Test;
 class AppUserTest {
 
 	/**
-	 * teste equals method
+	 * тестирую что при сравнении equals учитывается
+	 * имя пользователя и id
 	 */
 	@Test
 	void testEqualsShouldBeFail() {

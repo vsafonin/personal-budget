@@ -77,8 +77,7 @@ public class PurchaseTransactionController {
 			productData.setProduct(product);
 			List<ProductData> productDataList = Arrays.asList(productData);
 			purchaseTransaction.setProductDatas(productDataList);
-			return "transaction-purchase-edit";
-		}
+	}
 		else {
 			// find purchase transaction in db
 			Optional<PurchaseTransaction> purchaseTrnOptional = purchaseTransactionService.findById(id);

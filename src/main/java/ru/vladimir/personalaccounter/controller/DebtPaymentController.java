@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.vladimir.personalaccounter.entity.DebtPayment;
 import ru.vladimir.personalaccounter.entity.DebtTransaction;
+import ru.vladimir.personalaccounter.exception.DebtPaymentNotFoundExp;
 import ru.vladimir.personalaccounter.service.DebtPaymentService;
 import ru.vladimir.personalaccounter.service.DebtTransactionService;
 /**
@@ -65,6 +66,9 @@ public class DebtPaymentController {
 	@GetMapping("/debt-transaction/payment/delete/{id}")
 	public String deletePyament(@PathVariable("id") long id) {
 		DebtPayment thedebtPayment = debtPaymentService.findById(id);
+		if (thedebtPayment == null) {
+			throw new DebtPaymentNotFoundExp();
+		}
 		debtPaymentService.delete(thedebtPayment);
 		return "redirect:/debt-transaction/" + thedebtPayment.getDebtTransaction().getId() + "?type=" + 
 			thedebtPayment.getDebtTransaction().getTypeOfOperation().toString();
@@ -81,14 +85,14 @@ public class DebtPaymentController {
 	 */
 	@PostMapping("/debt-transaction/payment/{id}")
 	public String savedebtPayment(@PathVariable("id") long id,
-			@Valid @ModelAttribute("debtPayment") DebtPayment thedebtPayment,
+			@Valid @ModelAttribute("debtPayment") DebtPayment theDebtPayment,
 			BindingResult bindingResult,
 			Model model) {
 		if (bindingResult.hasErrors()) {
 			return "debt-payment";
 		}
-		debtPaymentService.save(thedebtPayment);
-		return "redirect:/debt-transaction/" + thedebtPayment.getDebtTransaction().getId() + "?type=" + 
-				thedebtPayment.getDebtTransaction().getTypeOfOperation().toString();
+		debtPaymentService.save(theDebtPayment);
+		return "redirect:/debt-transaction/" + theDebtPayment.getDebtTransaction().getId() + "?type=" + 
+		theDebtPayment.getDebtTransaction().getTypeOfOperation().toString();
 	}
 }

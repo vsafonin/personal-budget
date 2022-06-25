@@ -11,6 +11,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.Future;
+import javax.validation.constraints.NotNull;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -32,11 +33,13 @@ public class DebtTransaction extends AbstractTransaction {
 	
 	@Column
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
+	@NotNull
 	@Future(message = "{transaction.debt.valid.endDate}")
 	private Date endDate;
 	
 	@ManyToOne(cascade = {CascadeType.PERSIST,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.MERGE})
 	@JoinColumn(name = "partner_id", nullable = false)
+	@NotNull
 	private Partner partner;
 	
 	@OneToMany(mappedBy = "debtTransaction", cascade = CascadeType.ALL)

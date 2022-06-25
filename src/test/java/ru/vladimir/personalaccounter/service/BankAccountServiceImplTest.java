@@ -1,6 +1,9 @@
 package ru.vladimir.personalaccounter.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -54,6 +57,43 @@ class BankAccountServiceImplTest {
 	private void doInit() {
 		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(appUser);
 	}
+	/*
+	 * тестирую что создании нового банковского счета и он единственный, ему присвоен статус isDefault
+	 */
+	@Test
+	void testSaveBankAccount_should_set_isDefault() {
+		when(accountRepository.getBankAccounts(any())).thenReturn(null);
+		BankAccount thBankAccount = new BankAccount();
+		bankAccountService.save(thBankAccount);
+		assertThat(thBankAccount.isDefaultAccount()).isTrue();
+	}
+	
+	
+	/*
+	 * тестирую что при создании нового банковского счет и их несколько, и у этого счета установлен признак isDefault()
+	 * у другого счета этот признак был снят
+	 */
+	@Test
+	void testSaveBankAccount_shoud_disable_isDefault_in_anotherAccounts() {
+		BankAccount theOldBankAccount = new BankAccount();
+		theOldBankAccount.setName("oldBankAccount");
+		theOldBankAccount.setId(1L);
+		theOldBankAccount.setDefaultAccount(true);
+		
+		BankAccount theNewBankAccount = new BankAccount();
+		theNewBankAccount.setName("newBankAccount");
+		theNewBankAccount.setDefaultAccount(true);
+		
+		when(accountRepository.getBankAccounts(any())).thenReturn(List.of(theOldBankAccount));
+		bankAccountService.save(theOldBankAccount);
+		assertThat(theNewBankAccount.isDefaultAccount()).isTrue();
+		assertThat(theOldBankAccount.isDefaultAccount()).isFalse();
+	}
+	
+	/*
+	 * тестирую что при вызове метода changeBalanceSaveTransaction меняется сумма баланса BankAccount
+	 * проверяю что меняется в нужную сторону.
+	 */
 	@Test
 	void testChangeBalanceSaveTransactionAbstractTransaction() {
 		
@@ -68,8 +108,6 @@ class BankAccountServiceImplTest {
 		theAbstractTransaction.setBankAccount(theBankAccount);
 		theAbstractTransaction.setAppUser(appUser);
 		
-		
-		
 		bankAccountService.changeBalanceSaveTransaction(theAbstractTransaction);
 		assertThat(theBankAccount.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(90));
 		
@@ -78,6 +116,10 @@ class BankAccountServiceImplTest {
 		assertThat(theBankAccount.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(100));
 	}
 
+	/*
+	 *тест похож на testChangeBalanceSaveTransactionAbstractTransaction()
+	 *но только для операций когда заданы 2 транзакции. 
+	 */
 	@Test
 	void testChangeBalanceSaveTransactionAbstractTransactionAbstractTransaction() {
 		BankAccount theBankAccount = new BankAccount();
@@ -100,6 +142,9 @@ class BankAccountServiceImplTest {
 		assertThat(theBankAccount.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(90)); //was 100 - 10 *old - ( new20 - old10) = 90
 		
 	}
+	/*
+	 * тест такой же как testChangeBalanceSaveTransactionAbstractTransactionAbstractTransaction только старая транзакция была больше чем новая
+	 */
 	@Test
 	void testChangeBalanceSaveTransactionAbstractTransactionAbstractTransactionOldBetterThenNew() {
 		BankAccount theBankAccount = new BankAccount();
@@ -122,6 +167,9 @@ class BankAccountServiceImplTest {
 		assertThat(theBankAccount.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(110)); //was 100 + 20 *old - ( old20 - new10) = 110
 		
 	}
+	/*
+	 * тестирую когда при сохранении транзакций у них разные банковские счета
+	 */
 	@Test
 	void testChangeBalanceSaveTransactionAbstractTransactionAbstractTransactionDifferentBank() {
 		BankAccount theBankAccountOld = new BankAccount();
@@ -150,6 +198,9 @@ class BankAccountServiceImplTest {
 		assertThat(theBankAccountOld.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(110)); //was 100 - 10
 		
 	}
+	/*
+	 * тестирую самую сложную ситуацию когда у транзакций разные банки и суммы
+	 */
 	@Test
 	void testChangeBalanceSaveTransactionAbstractTransactionAbstractTransactionDifferentBankAndSum() {
 		BankAccount theBankAccountOld = new BankAccount();
@@ -178,7 +229,9 @@ class BankAccountServiceImplTest {
 		assertThat(theBankAccountOld.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(110)); //was 100 - 10
 		
 	}
-
+	/*
+	 * проверяю что баланс меняет в обратную сторону, так как этот метод вызывается при удалении транзакции.
+	 */
 	@Test
 	void testChangeBalanceDeleteTransactionAbstractTransaction() {
 		BankAccount theBankAccount = new BankAccount();
@@ -199,7 +252,10 @@ class BankAccountServiceImplTest {
 		bankAccountService.changeBalanceDeleteTransaction(theAbstractTransaction);
 		assertThat(theBankAccount.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(100)); //was 110 - 10
 	}
-
+	
+	/*
+	 * тестирую что баланс меняется при сохранении TransferTransaction
+	 */
 	@Test
 	void testChangeBalanceSaveTransactionTransferTransaction() throws CurrencyParseExcp {
 		BankAccount theBankAccountOld = new BankAccount();
@@ -225,6 +281,10 @@ class BankAccountServiceImplTest {
 		assertThat(theBankAccountOld.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(80));
 		assertThat(theBankAccountNew.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(120));
 	}
+	/*
+	 * тестирую что баланс BankAccount меняется при вызове changeBalanceSaveTransaction( TransferTransaction tr)
+	 *  (вызывается при внесении изменений в TransferTransactions)
+	 */
 	@Test
 	void testChangeBalanceSaveTransactionTransferTransactionDifferentCurrency() throws CurrencyParseExcp {
 		BankAccount theBankAccountOld = new BankAccount();
@@ -252,6 +312,11 @@ class BankAccountServiceImplTest {
 		assertThat(theBankAccountOld.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(80));
 		assertThat(theBankAccountNew.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(105));
 	}
+	
+	/*
+	 * проверяю что при вызове метода changeBalanceDeleteTransaction(TransferTransaction tr)
+	 * средства возвращяются BankAccount
+	 */
 
 	@Test
 	void testChangeBalanceDeleteTransactionTransferTransaction() {

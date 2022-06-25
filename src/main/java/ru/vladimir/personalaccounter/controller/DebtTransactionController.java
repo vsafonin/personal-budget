@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import ru.vladimir.personalaccounter.entity.AppUser;
 import ru.vladimir.personalaccounter.entity.DebtTransaction;
 import ru.vladimir.personalaccounter.enums.TypeOfOperation;
+import ru.vladimir.personalaccounter.exception.DebtTransactionNotFoundExp;
 import ru.vladimir.personalaccounter.service.DebtTransactionService;
 import ru.vladimir.personalaccounter.service.UserService;
 /**
@@ -65,6 +66,9 @@ public class DebtTransactionController {
 		}
 		else {
 			theDebtTransaction= debtTransactionService.findById(id);
+			if (theDebtTransaction == null) {
+				throw new DebtTransactionNotFoundExp();
+			}
 		}
 		model.addAttribute("debtTransaction",theDebtTransaction);
 		model.addAttribute("listOfPayments", theDebtTransaction.getDebtPayment());
@@ -81,6 +85,9 @@ public class DebtTransactionController {
 	@GetMapping("/debt-transaction/delete/{id}")
 	public String deleteDebtTransaction(@PathVariable("id")long id, Model model) {
 		DebtTransaction thedebtTransaction = debtTransactionService.findById(id);
+		if (thedebtTransaction == null) {
+			throw new DebtTransactionNotFoundExp();
+		}
 		debtTransactionService.delete(thedebtTransaction);
 		return "redirect:/debt";
 	}
@@ -90,7 +97,7 @@ public class DebtTransactionController {
 	 * @param id - DebtTransaction id
 	 * @param model -  Model for thymeleaf.
 	 * @param debtTransaction - DebtTransaction which user want to save.
-	 * @param bindingResult - result validation object DebtTransaction.
+	 * @param bindingResult - result validation object DebtTransaction. We are check field partner, sum, end date. 
 	 * @return if has error, return edit page  again, otherwise redirect to list of Debt Transactions page.
 	 */
 	@PostMapping("/debt-transaction/{id}")

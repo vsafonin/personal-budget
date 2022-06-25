@@ -110,7 +110,9 @@ public class RegistrationControllerTest {
     
     public RegistrationControllerTest() {
     }
-
+    /*
+     * тестирую что пользователь не может зарегистрироваться с слабым паролем
+     */
     @Test
     public void test_valid_user_should_be_false_password() throws Exception {
         String name = "pupa";
@@ -133,7 +135,9 @@ public class RegistrationControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.model().hasErrors());
     }
-
+    /*
+     * тестирую что пользователь не может зарегистрировать если ввел не верный пароль и подтверждение
+     */
     @Test
     public void test_valid_user_should_be_fail_password_and_confirm_notMatch() throws Exception {
         AppUser testUser = new AppUser();
@@ -159,7 +163,9 @@ public class RegistrationControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.model().hasErrors());
     }
-
+    /*
+     * тестирую что пользователь не может зарегистрироваться если такой пользователь уже есть
+     */
     @Test
     public void test_username_exists_should_be_fail() throws Exception {
         String username = "pupa";
@@ -178,9 +184,11 @@ public class RegistrationControllerTest {
         )
                 .andExpect(MockMvcResultMatchers.model().hasErrors());
     }
-
+    /*
+     * тестирую что пользователь может зарегистрироваться, все в порядке
+     */
     @Test
-    public void test_username_exists_should_be_ok() throws Exception {
+    public void test_register_should_be_ok() throws Exception {
         String username = "pupa";
         AppUser theUser = new AppUser();
         Mockito.when(userService.findByUsername(username)).thenReturn(null);
@@ -197,7 +205,9 @@ public class RegistrationControllerTest {
         )
                 .andExpect(MockMvcResultMatchers.model().hasNoErrors());
     }
-
+    /*
+     * тестирую что пользователь не может зарегистрироваться если почта уже есть
+     */
     @Test
     public void test_email_exists_should_be_fail() throws Exception {
         String email = "pupa@mail.ru";
@@ -216,7 +226,9 @@ public class RegistrationControllerTest {
         )
                 .andExpect(MockMvcResultMatchers.model().hasErrors());
     }
-
+    /*
+     * тестирую что регистрация проходит если такой почты в базе нет
+     */
     @Test
     public void test_email_exists_should_be_ok() throws Exception {
         String email = "pupa@mail.ru";

@@ -1,6 +1,7 @@
 package ru.vladimir.personalaccounter.service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,6 @@ import ru.vladimir.personalaccounter.entity.AdjustmentTransaction;
 import ru.vladimir.personalaccounter.entity.AppUser;
 import ru.vladimir.personalaccounter.entity.BankAccount;
 import ru.vladimir.personalaccounter.enums.TypeOfOperation;
-import ru.vladimir.personalaccounter.exception.UsrTransactionNotFoundExp;
 import ru.vladimir.personalaccounter.repository.AdjustmentTransactionRepository;
 
 @Service
@@ -32,14 +32,11 @@ public class AdjustmentTransactionServiceImpl implements AdjustmentTransactionSe
 	}
 
 	@Override
-	public AdjustmentTransaction getTransactioById(Long id) {
+	public AdjustmentTransaction getTransactioById(Long id)throws NoSuchElementException {
+		
 			AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
             Optional<AdjustmentTransaction> usrTransaction =  adjustmentTransactionRepository.findById(theAppUser,id);
-            if (usrTransaction.isPresent()) {
-            	return usrTransaction.get();
-            }
-            
-            throw new UsrTransactionNotFoundExp();
+            return usrTransaction.get();
 	}
 
 	@Override

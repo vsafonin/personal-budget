@@ -7,20 +7,22 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.NoSuchElementException;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,7 +30,6 @@ import ru.vladimir.personalaccounter.entity.AppUser;
 import ru.vladimir.personalaccounter.entity.BankAccount;
 import ru.vladimir.personalaccounter.entity.Partner;
 import ru.vladimir.personalaccounter.entity.SalaryTransaction;
-import ru.vladimir.personalaccounter.exception.SalaryTransactionNotFoundExcp;
 import ru.vladimir.personalaccounter.methods.JwtProvider;
 import ru.vladimir.personalaccounter.repository.AppUserJwtRepository;
 import ru.vladimir.personalaccounter.repository.PartnerRepository;
@@ -38,6 +39,7 @@ import ru.vladimir.personalaccounter.service.UserService;
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = SalaryTransactionController.class)
+@WithMockUser
 class SalaryTransactionControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
@@ -63,35 +65,42 @@ class SalaryTransactionControllerTest {
 	@MockBean
 	private UserService userService;
 	
-	@BeforeEach
-	private void setUp() {
-		AppUser theUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
-		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(theUser);
-
-	}
 	
-
+	/*
+	 * тестирую что пользователь может запросить страницу создания новой SalaryTransaction
+	 */
 	@Test
 	void testGetSalaryTransactionPageGetNew() throws Exception {
-		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
-		mockMvc.perform(get("/salary-transaction/0").with(user(theTestUser)))
-		.andExpect(view().name("transaction-salary"));
-	}
-	@Test
-	void testGetSalaryTransactionPageGetNewShouldBeFailBadUser() throws Exception {
+		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(new AppUser());
 		mockMvc.perform(get("/salary-transaction/0"))
-		.andExpect(redirectedUrl("http://localhost/login"));
+			.andExpect(view().name("transaction-salary"));
 	}
+	/*
+	 * тестирую что если запросить не существующую SalaryTransaction будет выдана ошибка NOT FOUND
+	 */
 	@Test
 	void testGetSalaryTransactionPageGetNewShouldBeFailBadId() throws Exception {
 		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
-		when(salaryTransactionService.findById(10)).thenThrow(new SalaryTransactionNotFoundExcp());
+		when(salaryTransactionService.findById(10)).thenThrow(NoSuchElementException.class);
 		
 		mockMvc.perform(get("/salary-transaction/10").with(user(theTestUser)))
-		.andExpect(status().is4xxClientError());
+		.andExpect(status().isNotFound());
 	}
-
-	//post tests
+	
+	/*
+	 * тестирую что если неверно заполнена SalaryTransaction получаю страницу редактирования
+	 */
+	@Test
+	void testSaveSalaryTransaction_should_be_fail_valid_field() throws Exception {
+		when(userService.getCurrentAppUserFromContextOrCreateDemoUser()).thenReturn(new AppUser());
+		mockMvc.perform(post("/salary-transaction/0").with(csrf()).flashAttr("salaryTransaction", new SalaryTransaction()))
+			.andExpect(view().name("transaction-salary"))
+			.andExpect(model().attributeHasFieldErrors("salaryTransaction", "sumTransaction","partner"));
+	}
+	
+	/*
+	 * тестирую что если транзакция верно заполнена ее можно сохранить
+	 */
 	@Test
 	void testSaveSalaryTransactionPage() throws Exception {
 		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
@@ -107,7 +116,6 @@ class SalaryTransactionControllerTest {
 		theSalaryTransaction.setSumTransaction(BigDecimal.TEN);
 		
 		mockMvc.perform(post("/salary-transaction/0")
-				.with(user(theTestUser))
 				.with(csrf())
 				.flashAttr("salaryTransaction", theSalaryTransaction))
 		.andExpect(redirectedUrl("/salary"));
@@ -115,42 +123,26 @@ class SalaryTransactionControllerTest {
 		verify(salaryTransactionService,times(1)).save(theSalaryTransaction);
 	}
 	
-	
+	/*
+	 * тестирую что при запросе удаления существующей транзакции происходит удаление
+	 */
 	@Test
 	void testDeleteSalaryTransaction() throws Exception {
 		SalaryTransaction theSalaryTransaction = new SalaryTransaction();
-		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
 		when(salaryTransactionService.findById(10)).thenReturn(theSalaryTransaction);
-		mockMvc.perform(get("/salary-transaction/delete/10").with(user(theTestUser))).andExpect(redirectedUrl("/salary"));
+		mockMvc.perform(get("/salary-transaction/delete/10")).andExpect(redirectedUrl("/salary"));
 		verify(salaryTransactionService,times(1)).delete(theSalaryTransaction);
 	}
+	/*
+	 * тестирую что при запросе удаление НЕ существующей транзакции удаления не происход, пользователь получает 
+	 * NOT FOUND
+	 */
 	@Test
 	void testDeleteSalaryTransactionShouldBeFail() throws Exception {
 		SalaryTransaction theSalaryTransaction = new SalaryTransaction();
-		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
-		when(salaryTransactionService.findById(10)).thenThrow(new SalaryTransactionNotFoundExcp());
-		mockMvc.perform(get("/salary-transaction/delete/10").with(user(theTestUser))).andExpect(status().is4xxClientError());
+		when(salaryTransactionService.findById(10)).thenThrow(NoSuchElementException.class);
+		mockMvc.perform(get("/salary-transaction/delete/10")).andExpect(status().isNotFound());
 		verify(salaryTransactionService,times(0)).delete(theSalaryTransaction);
-	}
-	
-	//post tests
-	@Test
-	void testSaveSalaryTransactionPageShouldBeFailPathnerNull() throws Exception {
-		AppUser theTestUser = new AppUser("pupa","pupa","123","123","pupa@mail.ru",true);
-		BankAccount theTestBankAccount = new BankAccount("test", BigDecimal.TEN, "test bank", theTestUser, Currency.getInstance("RUB"));
-		SalaryTransaction theSalaryTransaction = new SalaryTransaction();
-		theSalaryTransaction.setAppUser(theTestUser);
-		theSalaryTransaction.setBankAccount(theTestBankAccount);
-		theSalaryTransaction.setDescription("test salary");
-		theSalaryTransaction.setSumTransaction(BigDecimal.valueOf(100));
-		
-		mockMvc.perform(post("/salary-transaction/0")
-				.with(user(theTestUser))
-				.with(csrf())
-				.flashAttr("salaryTransaction", theSalaryTransaction))
-		.andExpect(view().name("transaction-salary"));
-		
-		verify(salaryTransactionService,times(0)).save(theSalaryTransaction);
 	}
 
 }

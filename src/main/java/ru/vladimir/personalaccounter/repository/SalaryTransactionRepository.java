@@ -17,5 +17,5 @@ public interface SalaryTransactionRepository
 	List<SalaryTransaction> getAllSalaryTransaction(@Param("appUser") AppUser appUser);
 	
 	@Query("Select s from SalaryTransaction s Where s.appUser=:appUser and s.id=:id" )
-	Optional<SalaryTransaction> getSalaryTransactionById(@Param("appUser") AppUser appUser, @Param("id") long id);
+	Optional<SalaryTransaction> getSalaryTransactionByAppUserAndId(@Param("appUser") AppUser appUser, @Param("id") long id);
 }
