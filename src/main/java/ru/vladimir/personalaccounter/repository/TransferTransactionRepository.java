@@ -1,5 +1,6 @@
 package ru.vladimir.personalaccounter.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,5 +14,6 @@ public interface TransferTransactionRepository extends JpaRepository<TransferTra
 	
 	@Query("Select t From TransferTransaction t where t.appUser = :appUser and t.id = :id")
 	Optional<TransferTransaction> findByAppUserAndId(@Param("appUser") AppUser appUser, @Param("id") long id);
-
+	
+	List<TransferTransaction> findAllByAppUserOrderByCreateTimeDesc(AppUser appUser);
 }

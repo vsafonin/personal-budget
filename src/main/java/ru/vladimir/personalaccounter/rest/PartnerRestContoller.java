@@ -34,10 +34,10 @@ public class PartnerRestContoller {
 		        AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
 		        
 		        if (q.isBlank()) {
-		            pathnerInDb = partnerRepository.findAll().stream().limit(10).collect(Collectors.toList());
+		            pathnerInDb = partnerRepository.findAllByAppUser(theAppUser).stream().limit(10).collect(Collectors.toList());
 		        }
 		        else {
-		            pathnerInDb = partnerRepository.findAll().stream()
+		            pathnerInDb = partnerRepository.findAllByAppUser(theAppUser).stream()
 		            		.filter(c -> c.getAppUser().equals(theAppUser))
 		                    .filter(c -> c.getName().contains(q))
 		                    .limit(10).collect(Collectors.toList());

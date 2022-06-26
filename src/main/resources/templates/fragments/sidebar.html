@@ -21,7 +21,7 @@
 	                <ul class="nav flex-column" th:each="account : ${bankAccounts}">
 	  					<li class="nav-item">
 		    					<a class="nav-link active" th:href="@{/bank-account/{id}(id=${account.id})}" th:text="${account.name}">account 1</a>
-		    					<p style="margin-left:20px;" th:text="${account.balance + ' ' + account.currency.currencyCode }">balance
+		    					<p style="margin-left:20px;" th:text="${#numbers.formatDecimal(account.balance,1,'WHITESPACE',2,'COMMA') + ' ' + account.currency.currencyCode }">balance
 	  					</li>
 	  				</ul>
 	  				<!-- добавить новый счет -->

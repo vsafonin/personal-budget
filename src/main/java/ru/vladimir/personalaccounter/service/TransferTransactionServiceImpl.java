@@ -50,7 +50,8 @@ public class TransferTransactionServiceImpl implements TransferTransactionServic
 
 	@Override
 	public List<TransferTransaction> getTransferTransactions() {
-		return transferTransactionRepository.findAll();
+		AppUser theAppUser = userService.getCurrentAppUserFromContextOrCreateDemoUser();
+		return transferTransactionRepository.findAllByAppUserOrderByCreateTimeDesc(theAppUser);
 	}
 
 }
