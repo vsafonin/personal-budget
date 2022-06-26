@@ -107,7 +107,9 @@ public class SalaryTransactionController {
 		Partner partner = pathnerRepository.findByName(salaryTransaction.getAppUser(),
 				salaryTransaction.getPartner().getName());
 		if (partner == null) {
-			salaryTransaction.setPartner(pathnerRepository.save(salaryTransaction.getPartner()));
+			Partner partnerNew = salaryTransaction.getPartner();
+			partnerNew.setAppUser(salaryTransaction.getAppUser());
+			salaryTransaction.setPartner(pathnerRepository.save(partnerNew));
 		}
 		else {
 			salaryTransaction.setPartner(partner);

@@ -1,5 +1,7 @@
 package ru.vladimir.personalaccounter.entity;
 
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -20,7 +22,7 @@ public class SalaryTransaction extends AbstractTransaction {
 	
 	private static final long serialVersionUID = 1L;
 
-	@ManyToOne
+	@ManyToOne(cascade = {CascadeType.PERSIST,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.MERGE})
 	@NotNull
 	@JoinColumn(name = "partner_id", nullable = false)
 	private Partner partner;

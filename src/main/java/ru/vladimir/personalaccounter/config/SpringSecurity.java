@@ -71,7 +71,8 @@ public class SpringSecurity extends WebSecurityConfigurerAdapter {
 			http.csrf().disable()
 				.antMatcher("/api/**")
 				.authorizeRequests()
-				.antMatchers("/api/**").hasRole("user")
+				.antMatchers("/api/category","/api/partner","/api/product","/api/shop").permitAll()
+				.antMatchers("/api/getUserName","/api/debt","/api/purchase-transaction","/api/income","/api/salary").hasRole("user")
 				.and()
 				.httpBasic().and().addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 			
