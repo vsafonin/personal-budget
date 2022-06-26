@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import ru.vladimir.personalaccounter.entity.Category;
 import ru.vladimir.personalaccounter.entity.DebtTransaction;
 import ru.vladimir.personalaccounter.entity.Partner;
 import ru.vladimir.personalaccounter.entity.PurchaseTransaction;
@@ -61,17 +62,24 @@ public class ShowTransactionsController {
 	@GetMapping("/")
 	public String getPurchaseTransactions(Model model, @RequestParam(name = "page", defaultValue = "1") int currentPageNum,
 			@RequestParam(name = "filterByBankName", defaultValue = "") String bankNameFilter,
-			@RequestParam(name = "filterByShop", defaultValue = "") String shopNameFilter) {
+			@RequestParam(name = "filterByShop", defaultValue = "") String shopNameFilter,
+			@RequestParam(name = "filterByCategory",defaultValue = "") String categoryNameFilter) {
 		boolean filterByBank = bankNameFilter != null && !bankNameFilter.isEmpty() && !bankNameFilter.equals("null");
 		boolean filterByShop = shopNameFilter != null && !shopNameFilter.isEmpty() && !shopNameFilter.equals("null");
+		boolean filterByCategory = categoryNameFilter != null && !categoryNameFilter.isEmpty() && !categoryNameFilter.equals("null");
 		model.addAttribute("filterByBank", bankNameFilter);
 		model.addAttribute("filterByShop", shopNameFilter);
+		model.addAttribute("filterByCategory", categoryNameFilter);
 		
 		List<PurchaseTransaction> resultListPurchaseTransaction;
 		List<PurchaseTransaction> tempListPurchaseTransaction = purchaseTransactionService.getAllPurchaseTransactions();
 		Set<Shop> shopList = new HashSet<Shop>();
 		tempListPurchaseTransaction.stream().forEach(t -> shopList.add(t.getShop()));
+		Set<Category> categorySet = new HashSet<>();
 		model.addAttribute("shops", shopList);
+		tempListPurchaseTransaction.stream().forEach(t ->
+			t.getProductDatas().stream().forEach(pd -> categorySet.add(pd.getProduct().getCategory())));
+		model.addAttribute("categories", categorySet);
 		
 		if(filterByBank) {
 			tempListPurchaseTransaction = tempListPurchaseTransaction.stream().filter(t -> t.getBankAccount().getName().equals(bankNameFilter))
@@ -83,6 +91,13 @@ public class ShowTransactionsController {
 					.filter(t -> t.getShop().getName().equals(shopNameFilter)).collect(Collectors.toList());
 		}
 		
+		if (filterByCategory) {
+			tempListPurchaseTransaction = tempListPurchaseTransaction.stream()
+					.filter(
+							t -> t.getProductDatas()
+								.stream().anyMatch(pd -> pd.getProduct().getCategory().getName().equals(categoryNameFilter)))
+					.collect(Collectors.toList());
+		}
 		if (currentPageNum == 1) {
 
 			resultListPurchaseTransaction = tempListPurchaseTransaction.stream().limit(PAGE_LIMIT)

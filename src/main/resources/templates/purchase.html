@@ -25,11 +25,13 @@
 							<label for="filter" th:text="#{indexPage.filterByBank}">Filter
 								by bank</label> <select id="filter"  class="selectpicker" data-live-search="true" data-size="5"
 								th:data-shop-filter = "${filterByShop}"
+								th:data-category-filter="${filterByCategory}"
 								th:onchange="'window.location.href = \'' + @{/} + '?filterByBankName=\'
 											 + this.value
 											 + \'&filterByShop=\' + this.getAttribute(\'data-shop-filter\')
+											 + \'&filterByCategory=\' + this.getAttribute(\'data-category-filter\')
 											 '">
-								<option value="" th:text="#{indexPage.filterByBank.nothing}">Nothing
+								<option value="null" th:text="#{indexPage.filterByBank.nothing}">Nothing
 									selected</option>
 								<option th:each="name : ${bankAccounts}" th:text="${name.name}"
 									th:selected="${name.name == filterByBank}"></option>
@@ -39,15 +41,35 @@
 								<label for="filter" th:text="#{indexPage.filterByShop}">Filter
 								by shop</label> <select id="filter"  class="selectpicker" data-live-search="true" data-size="5"
 								th:data-bank-filter="${filterByBank}"
+								th:data-category-filter="${filterByCategory}"
 								th:onchange="'window.location.href = \'' + @{/} + '?filterByBankName=\'
 											 + this.getAttribute(\'data-bank-filter\')
 											 + \'&filterByShop=\' + this.value
+											 + \'&filterByCategory=\' + this.getAttribute(\'data-category-filter\')
 											 '">
-								<option value="" th:text="#{indexPage.filterByBank.nothing}">Nothing
+								<option value="null" th:text="#{indexPage.filterByBank.nothing}">Nothing
 									selected</option>
 								<option th:each="name : ${shops}"
 									th:text="${name.name}"
 									th:selected="${name.name == filterByShop}"></option>
+							</select>
+						</div>
+						<div class="col">
+								<label for="filter" th:text="#{indexPage.filterByCategory}">Filter
+								by category</label> <select id="filter"  class="selectpicker" data-live-search="true" data-size="5"
+								th:data-bank-filter="${filterByBank}"
+								
+								th:data-shop-filter="${filterByShop}"
+								th:onchange="'window.location.href = \'' + @{/} + '?filterByBankName=\'
+											 + this.getAttribute(\'data-bank-filter\')
+											 + \'&filterByShop=\' + this.getAttribute(\'data-shop-filter\')
+											 + \'&filterByCategory=\' + this.value
+											 '">
+								<option value="null" th:text="#{indexPage.filterByBank.nothing}">Nothing
+									selected</option>
+								<option th:each="name : ${categories}"
+									th:text="${name.name}"
+									th:selected="${name.name == filterByCategory}"></option>
 							</select>
 						</div>
 					</div>
