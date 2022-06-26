@@ -3,9 +3,11 @@ package ru.vladimir.personalaccounter.client;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Currency;
+
 import javax.mail.internet.ParseException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;

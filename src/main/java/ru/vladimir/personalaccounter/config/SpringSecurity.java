@@ -104,6 +104,8 @@ public class SpringSecurity extends WebSecurityConfigurerAdapter {
 						.clearAuthentication(true).permitAll().deleteCookies(COOCKIE_NAME).permitAll()
 					.and()
 						.rememberMe()
+						.key(COOCKIE_ENCRYPT_KEY)
+						.userDetailsService(userDetailsService)
 						.tokenValiditySeconds(2592000); // 30days
 		}
 

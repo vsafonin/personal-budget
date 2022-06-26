@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.Calendar;
 
 import org.junit.jupiter.api.Test;
@@ -120,11 +121,7 @@ class DebtTransactionControllerTest {
 		DebtTransaction testDebtTransaction = new DebtTransaction();
 		testDebtTransaction.setPartner(new Partner());
 		testDebtTransaction.setSumTransaction(BigDecimal.TEN);
-		Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(currentTime);
-		cal.roll(10, false);
-		testDebtTransaction.setEndDate(cal.getTime());
+		testDebtTransaction.setEndDate(Timestamp.valueOf(LocalDate.now().minusDays(30).atStartOfDay()));
 		mockMvc.perform(post("/debt-transaction/0").with(csrf()).flashAttr("debtTransaction", testDebtTransaction))
 		.andExpect(view().name("debt-edit"))
 		.andExpect(model().attributeHasFieldErrors("debtTransaction", "endDate"));
