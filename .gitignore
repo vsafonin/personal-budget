@@ -38,3 +38,4 @@ docker-compose*
 #ssl
 /ssl
 */META-INF/*
+*.tar.gz
