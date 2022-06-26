@@ -303,10 +303,10 @@ public class ShowTransactionsController {
 	 * This is may be number from 0 to currentPageNum - 5.
 	 * Next we add numbers denoting links to page. We want get sutructure like this:
 	 * 		currentPageNum = 4
-	 *  	result = [3,2,1]
+	 *  	result = [1,2,3]
 	 *  or
 	 *  	currentPageNum = 9
-	 *  	result = [8,7,6,5,4]
+	 *  	result = [4,5,6,7,8]
 	 * @param currentPageNum
 	 * @return
 	 */
@@ -315,8 +315,9 @@ public class ShowTransactionsController {
         for (int i = 1; i < currentPageNum && j <= PAGE_NUM_LIMIT; i++, j++)
             ;
         int[] result = new int[j];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = currentPageNum - (i + 1);
+        int arraySize = result.length;
+        for (int i = 0; i < arraySize; i++) {
+            result[(arraySize - 1) - i] = currentPageNum - (i + 1);
         }
         return result;
 	}
