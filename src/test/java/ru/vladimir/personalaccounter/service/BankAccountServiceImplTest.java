@@ -83,7 +83,7 @@ class BankAccountServiceImplTest {
 		theNewBankAccount.setDefaultAccount(true);
 		
 		when(accountRepository.getBankAccounts(any())).thenReturn(List.of(theOldBankAccount));
-		bankAccountService.save(theOldBankAccount);
+		bankAccountService.save(theNewBankAccount);
 		assertThat(theNewBankAccount.isDefaultAccount()).isTrue();
 		assertThat(theOldBankAccount.isDefaultAccount()).isFalse();
 	}
