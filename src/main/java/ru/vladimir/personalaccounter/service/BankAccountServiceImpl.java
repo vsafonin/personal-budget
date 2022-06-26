@@ -61,7 +61,8 @@ public class BankAccountServiceImpl implements BankAccountService {
 				}
 		else if (bankAccount.isDefaultAccount()) {
 			for (int i = 0 ; i < bankAccounts.size(); i++) {
-				if (bankAccounts.get(i).isDefaultAccount()) {
+				BankAccount tempBankAccounInList = bankAccounts.get(i); 
+				if (tempBankAccounInList.isDefaultAccount() && !bankAccount.equals(tempBankAccounInList)) {
 					BankAccount tmpBankAccount = bankAccounts.get(i);
 					tmpBankAccount.setDefaultAccount(false);
 					accountRepository.save(tmpBankAccount);
