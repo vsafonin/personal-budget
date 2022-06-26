@@ -80,7 +80,7 @@
 						<tr th:each="transaction : ${debtTransactionsDecrease}">
 							<td th:text="${transaction.bankAccount.name}">bank</td>
 							<td th:text="${transaction.partner.name}">From</td>
-							<td th:text="${transaction.sumTransaction}">Total sum</td>
+							<td th:text="${#numbers.formatDecimal(transaction.sumTransaction,1,'WHITESPACE',2,'COMMA')}">Total sum</td>
 							<td th:text="${transaction.description}">Description</td>
 							<td
 								th:text="${#dates.format(transaction.createTime, 'dd-MM-yyyy HH:MM')}">Create
@@ -160,7 +160,7 @@
 						<tr th:each="transaction : ${debtTransactionsIncrease}">
 							<td th:text="${transaction.bankAccount.name}">bank</td>
 							<td th:text="${transaction.partner.name}">From</td>
-							<td th:text="${transaction.sumTransaction}">Total sum</td>
+							<td th:text="${#numbers.formatDecimal(transaction.sumTransaction,1,'WHITESPACE',2,'COMMA')}">Total sum</td>
 							<td th:text="${transaction.description}">Description</td>
 							<td
 								th:text="${#dates.format(transaction.createTime, 'dd-MM-yyyy HH:MM')}">Create

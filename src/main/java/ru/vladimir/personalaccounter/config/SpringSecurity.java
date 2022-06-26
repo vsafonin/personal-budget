@@ -94,15 +94,17 @@ public class SpringSecurity extends WebSecurityConfigurerAdapter {
 			http.authorizeRequests().antMatchers("/", "/css/**", "/js/**", "/registration/**", "/recover/**" , "/debt-transaction/**"
 					,"/debt","/salary/**", "/reports/**", "/transfer/**", "/purchase-transaction/**", "/purchase/**",
 					"/salary", "/salary-transaction/**").permitAll()
-					.antMatchers("/user/**").hasRole("user").anyRequest().authenticated()
-					.and().formLogin().loginPage("/login").permitAll()
-					.successHandler(handleThatUserSuccesAuthAndStoreInDb())
-					.and().exceptionHandling()
-					.accessDeniedHandler(accessDeniedHandler()).and().logout().invalidateHttpSession(true)
-					.clearAuthentication(true).permitAll().deleteCookies(COOCKIE_NAME).permitAll()
-					.and().rememberMe() // TODO исправить, не работает
-					.key(COOCKIE_ENCRYPT_KEY).rememberMeCookieName(COOCKIE_NAME)
-					.tokenValiditySeconds(2592000); // 30days
+						.antMatchers("/user/**").hasRole("user").anyRequest().authenticated()
+					.and()
+						.formLogin().loginPage("/login").permitAll()
+						.successHandler(handleThatUserSuccesAuthAndStoreInDb())
+					.and()
+						.exceptionHandling()
+						.accessDeniedHandler(accessDeniedHandler()).and().logout().invalidateHttpSession(true)
+						.clearAuthentication(true).permitAll().deleteCookies(COOCKIE_NAME).permitAll()
+					.and()
+						.rememberMe()
+						.tokenValiditySeconds(2592000); // 30days
 		}
 
 		@Bean

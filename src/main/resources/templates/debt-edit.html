@@ -120,7 +120,7 @@
 						</thead>
 						<tbody>
 							<tr th:each="payment : ${listOfPayments}">
-								<td th:text="${payment.paySum}">Total sum</td>
+								<td th:text="${#numbers.formatDecimal(payment.paySum,1,'WHITESPACE',2,'COMMA')}">Total sum</td>
 								<td th:text="${#dates.format(payment.payDate, 'dd-MM-yyyy HH:MM')}">Create date</td>
 								<td><a
 								th:href="@{/debt-transaction/payment/{id}(id=${payment.id},dtid=${debtTransaction.id})}"

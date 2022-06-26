@@ -73,8 +73,8 @@
 						<tr th:each="transaction : ${transferTransactions}">
 							<td th:text="${transaction.fromBankAccount.name}">From bank</td>
 							<td th:text="${transaction.toBankAccount.name}">To bank</td>
-							<td th:text="${transaction.sumTransactionFrom}">Sum from</td>
-							<td th:text="${transaction.sumTransactionTo}">Sum to</td>
+							<td th:text="${#numbers.formatDecimal(transaction.sumTransactionFrom,1,'WHITESPACE',2,'COMMA')}">Sum from</td>
+							<td th:text="${#numbers.formatDecimal(transaction.sumTransactionTo,1,'WHITESPACE',2,'COMMA')}">Sum to</td>
 							<td
 								th:text="${#dates.format(transaction.createTime, 'dd-MM-yyyy HH:MM')}">Create
 								date</td>
