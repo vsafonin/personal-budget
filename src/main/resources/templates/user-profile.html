@@ -145,7 +145,7 @@
 							<td><a th:href="@{/user/deleteJwt/{id}(id=${token.id})}"
 								th:text="#{user.jwtToken.delete}"
 								th:data-confirm-delete="#{user.jwtToken.deleteAnswer}"
-								onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete
+								onclick="deleteAnswer(this)">Delete
 									link </a></td>
 						</tr>
 					</tbody>

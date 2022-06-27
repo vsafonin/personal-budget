@@ -111,7 +111,7 @@
 								th:href="@{/purchase-transaction/delete/{id}(id=${transaction.id})}"
 								th:text="#{indexPage.transaction.table.delete}"
 								th:data-confirm-delete="#{indexPage.transaction.table.deleteAnswer}"
-								onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete
+								onclick="deleteAnswer(this)">Delete
 									link </a></td>
 						</tr>
 					</tbody>

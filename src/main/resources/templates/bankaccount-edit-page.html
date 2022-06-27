@@ -81,7 +81,7 @@
 						currency</label>
 					<div class="col-sm-10 p-1" th:if="${bankAccount.id == 0}">
 						<select th:field="*{currency}" class="form-control w-75" size="5"
-							aria-label="size 3 .form-select-sm example" />
+							aria-label="size 3 .form-select-sm example">
 						<option th:each="currency : ${currencySet}" th:value="${currency}"
 							th:text="${currency.currencyCode}"
 							th:selected="${currency.numericCode==643}"></option>
@@ -89,7 +89,7 @@
 					</div>
 					<div class="col-sm-10 p-1" th:unless="${bankAccount.id == 0}">
 						<select th:field="*{currency}" class="form-control w-75" size="5"
-							aria-label="size 3 .form-select-sm example" />
+							aria-label="size 3 .form-select-sm example" >
 						<option th:each="currency : ${currencySet}" th:value="${currency}"
 							th:text="${currency.currencyCode}"
 							th:selected="${currency==bankAccount.currency}"></option>
@@ -106,7 +106,7 @@
 							th:href="@{/bank-account/delete/{id}(id=${bankAccount.id})}"
 							role="button" th:text="#{bankAccount.edit-page.deleteBtn}"
 							th:data-confirm-delete="#{bankAccount.edit-page.deleteConfirmAnswer}"
-							onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete
+							onclick="deleteAnswer(this)">Delete
 							it</a>
 					</div>
 					<!-- если была попытка удалить и у пользователя есть транзакции -->
@@ -144,7 +144,7 @@
 							th:href="@{/adjustment-transaction/delete/{id}(id=${transaction.id})}"
 							th:text="#{indexPage.transaction.table.delete}"
 							th:data-confirm-delete="#{indexPage.transaction.table.deleteAnswer}"
-							onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">Delete
+							onclick="deleteAnswer(this)">Delete
 								link </a></td>
 					</tr>
 				</tbody>

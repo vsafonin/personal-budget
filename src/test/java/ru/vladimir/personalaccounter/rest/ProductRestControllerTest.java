@@ -19,10 +19,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import ru.vladimir.personalaccounter.entity.Category;
 import ru.vladimir.personalaccounter.entity.Product;
 import ru.vladimir.personalaccounter.methods.JwtProvider;
-import ru.vladimir.personalaccounter.repository.CategoryRepository;
 import ru.vladimir.personalaccounter.repository.ProductRepository;
 import ru.vladimir.personalaccounter.service.BankAccountService;
 import ru.vladimir.personalaccounter.service.UserService;
