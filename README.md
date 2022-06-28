@@ -1,6 +1,6 @@
 # Personal budget
 
-Simple project for calculate how much i spending money. To see what it looks lke, you can go to https://personal-budget.tk/, by default you logged as demo user, you can:
+This is a simple project for calculate how much i spending money. To see what it looks lke, you can go to the https://personal-budget.tk/. By default you logged as demo user, you can:
 
 1. view and add purchase transactions.
    
@@ -18,9 +18,9 @@ Simple project for calculate how much i spending money. To see what it looks lke
    
    ![](https://media.giphy.com/media/aZcFHZIiXKJxNK2Cbn/giphy.gif)
 
-To make process adding a new purchase or salary or debt transaction easier, also created [Telegram bot](https://github.com/vsafonin/personal-budget-bot), for use it:
+To make process of adding a new purchase or salary or debt transaction easier, also created [Telegram bot](https://github.com/vsafonin/personal-budget-bot), for use it:
 
-1. Registration in application. 
+1. Registration on application. 
 
 2. Go to UserName -> Personal Area -> Generate Token
    
@@ -34,21 +34,23 @@ To make process adding a new purchase or salary or debt transaction easier, also
 
 # Requirments
 
-    1. java jre 17
+1. Java jre 17
 
-# Run in your PC
+2. Mysql server
 
-For start this app in your pc, you have multiple options:
+# Run on your PC
 
-1. Run via maven
+For start this app on your pc, you have multiple options:
+
+## Run via maven
    
-   - Install jre 17 in your pc. 
+   - Install jre 17 on your pc. 
    
-   - install mysql and create database "personal_budget"
+   - install mysql server and create a database "personal_budget"
    
-   - set MYSQL_USER and MYSQL_PASSWORD in ENV or edit src/main/resources/application.properties
+   - set MYSQL_USER and MYSQL_PASSWORD parameters on ENV or you can edit src/main/resources/application.properties
    
-   - set email parametrs in ENV (or edit src/main/resources/mail/emailconfig.properties):
+   - set email parametrs on ENV (or you can edit src/main/resources/mail/emailconfig.properties):
       
       - MAIL_FROM
       
@@ -62,33 +64,33 @@ For start this app in your pc, you have multiple options:
       
       - MAIL_USER
    
-   - go to path where you extract this app
+   - go to path where you extracted this app
    
-   - open Console and run: 
+   - open the console and run: 
       
       ```bash
       ./mvnw spring-boot:run
       ```
 
-2. Run via java -jar
+## Run via java -jar
    
-   - folow the instructions 1-5 in  "Run via maven"
+   - folow the steps 1-5 in [Run via maven](https://github.com/vsafonin/personal-budget#run-via-maven)
    
-   - open Console and run:
+   - open the console and run:
       
       ```bash
       ./mvn package -DskipTests
       ```
    
-   - run in Console (if you want change app name - edit pom.xml file):
+   - run in the console (if you want to change the app name - edit pom.xml file):
       
       ```bash
       java -jar java -jar target/personalAccounter-0.0.1.jar
       ```
 
-3. Run via Docker-compose
+## Run via Docker-compose
    
-   - build mysql docker image
+   - build the mysql docker image
       
       ```bash
       cd mysql-docker
@@ -96,30 +98,30 @@ For start this app in your pc, you have multiple options:
       cd ..
       ```
    
-   - build personal-budget-app docker image
+   - build the personal-budget-app docker image
       
       ```bash
       docker build . -t personal-budget-app    
       ```
 
-      if you wan use ssl, and you have cert
+      if you want to use ssl, and you have the certificate
       put your *.p12 file to ssl/keystore.p12
 
       ```bash
       docker build . -t personal-budget-app --build-arg SSL_ENABLE=true
       ```
    
-   - go to path where you extract personal-budget-bot
+   - go to path where you extracted sources files of the personal-budget-bot
       
       - clone [vsafonin/personal-budget-bot · GitHub](https://github.com/vsafonin/personal-budget-bot.git)
       
-      - build personal-budget-bot docker image
+      - build the personal-budget-bot docker image
          
          ```bash
          docker build . -t personal-budget-bot
          ```
    
-   - create docker-compose.yml file
+   - create the docker-compose.yml file
       
       ```yml
       version: '3'
