@@ -18,7 +18,7 @@ Simple project for calculate how much i spending money. To see what it looks lke
    
    ![](https://media.giphy.com/media/aZcFHZIiXKJxNK2Cbn/giphy.gif)
 
-To make process adding a new purchase or salary or debt transaction, also created [Telegram bot](https://github.com/vsafonin/personal-budget-bot), for use it:
+To make process adding a new purchase or salary or debt transaction easier, also created [Telegram bot](https://github.com/vsafonin/personal-budget-bot), for use it:
 
 1. Registration in application. 
 
@@ -26,7 +26,7 @@ To make process adding a new purchase or salary or debt transaction, also create
    
    ![](https://media.giphy.com/media/5VhbtfuFz6LCOA2MNQ/giphy.gif)
 
-3. Go to Telegram app and find @personal_budget_bot
+3. Go to Telegram app and find https://t.me/The_personal_budget_bot
 
 4. press /start , and after hello message send token in response.
    
@@ -100,8 +100,12 @@ For start this app in your pc, you have multiple options:
       
       ```bash
       docker build . -t personal-budget-app    
-      #if you wan use ssl, and you have cert
-      #put your *.p12 file to ssl/keystore.p12
+      ```
+
+      if you wan use ssl, and you have cert
+      put your *.p12 file to ssl/keystore.p12
+
+      ```bash
       docker build . -t personal-budget-app --build-arg SSL_ENABLE=true
       ```
    
