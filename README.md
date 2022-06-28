@@ -1,4 +1,4 @@
-#Personal budget
+# Personal budget
 
 Simple project for calculate how much i spending money. For look how it look, you can go to https://personal-budget.tk/, by default you logged as demo user, you can:
 
@@ -32,11 +32,11 @@ To make process adding a new purchase or salary or debt transaction, also create
    
    ![](https://media.giphy.com/media/IBT9e49jadXXeHdjTX/giphy.gif)
 
-#Requirments
+# Requirments
 
     1. java jre 17
 
-#Run in your PC
+# Run in your PC
 
 For start this app in your pc, you have multiple options:
 
@@ -69,8 +69,6 @@ For start this app in your pc, you have multiple options:
       ```bash
       ./mvnw spring-boot:run
       ```
-      
-      
 
 2. Run via java -jar
    
@@ -168,75 +166,64 @@ For start this app in your pc, you have multiple options:
             - NAME_TG_BOT=The_personal_budget_bot
             - TG_TOKEN=TGTOKEN_FROM_TG
       ```
-      
-      
-
 4. run it
    
    ```bash
    docker-compose up
    ```
+1.  build personal-budget-bot
    
+   1. 
    
-   
-   1.  build personal-budget-bot
-      
-      1. 
-      
-      1. ```yml
-         version: '3'
-         services:
-           personal-budget-app:
-             container_name: personal-budget-app
-             image: personal-budget-app
-             restart: always
-             ports:
-              - 443:9443
-             environment:
-               - MYSQL_HOST=mysqldb
-               - MYSQL_PORT=3306
-               - MYSQL_USER=root
-               - MYSQL_PASSWORD=password
-               - ROOT_ADDRESS_APP=http://localhost:9443
-               - JWT_TOKEN_PASS=some_string_pass
-               - SSL_PASSWORD=if_not_use_delete_it
-               - MAIL_FROM=your_mail@mail.ru
-               - MAIL_HOST=smtp.mail.ru
-               - MAIL_PASSWORD=password
-               - MAIL_PORT=465
-               - MAIL_PROTOCOL=smtp
-               - MAIL_USER=your_mail_user
-           mysqldb:
-             container_name: mysqldb
-             image: mysql-personal-app
-             restart: always
-             volumes:
-               - /var/app/personal-app-db:/var/lib/mysql
-             ports:
-               - 3307:3306
-             environment:
-               - MYSQL_DATABASE=personal_budget
-               - MYSQL_ROOT_PASSWORD=password
-           personal-budget-bot:
-             container_name: personal-budget-bot
-             image: personal-budget-bot
-             restart: always
-             environment:
-               - MYSQL_HOST=mysqldb
-               - MYSQL_PORT=3306
-               - MYSQL_USER=root
-               - MYSQL_PASSWORD=password
-               - BASE_URL=localhost
-               - BASE_PORT=9443
-               - BASE_SCHEME=http
-               - NAME_TG_BOT=The_personal_budget_bot
-               - TG_TOKEN=TGTOKEN_FROM_TG
-         
-         
+   2. ```yml
+      version: '3'
+      services:
+        personal-budget-app:
+          container_name: personal-budget-app
+          image: personal-budget-app
+          restart: always
+          ports:
+           - 443:9443
+          environment:
+            - MYSQL_HOST=mysqldb
+            - MYSQL_PORT=3306
+            - MYSQL_USER=root
+            - MYSQL_PASSWORD=password
+            - ROOT_ADDRESS_APP=http://localhost:9443
+            - JWT_TOKEN_PASS=some_string_pass
+            - SSL_PASSWORD=if_not_use_delete_it
+            - MAIL_FROM=your_mail@mail.ru
+            - MAIL_HOST=smtp.mail.ru
+            - MAIL_PASSWORD=password
+            - MAIL_PORT=465
+            - MAIL_PROTOCOL=smtp
+            - MAIL_USER=your_mail_user
+        mysqldb:
+          container_name: mysqldb
+          image: mysql-personal-app
+          restart: always
+          volumes:
+            - /var/app/personal-app-db:/var/lib/mysql
+          ports:
+            - 3307:3306
+          environment:
+            - MYSQL_DATABASE=personal_budget
+            - MYSQL_ROOT_PASSWORD=password
+        personal-budget-bot:
+          container_name: personal-budget-bot
+          image: personal-budget-bot
+          restart: always
+          environment:
+            - MYSQL_HOST=mysqldb
+            - MYSQL_PORT=3306
+            - MYSQL_USER=root
+            - MYSQL_PASSWORD=password
+            - BASE_URL=localhost
+            - BASE_PORT=9443
+            - BASE_SCHEME=http
+            - NAME_TG_BOT=The_personal_budget_bot
+            - TG_TOKEN=TGTOKEN_FROM_TG
+      ```
+
          ```
 
-        
-
-
-
-        
